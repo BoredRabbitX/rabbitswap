@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.1.1</title>
+    <title>Rabbit Swap X | Alpha 1.1.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -15,13 +15,9 @@
         .module { background: rgba(5, 5, 5, 0.95); border: 1px solid var(--border); padding: 25px; border-radius: 8px; border-top: 3px solid var(--accent); text-align: left; }
         .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.8rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; margin-bottom: 12px; border-radius: 4px; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn-max { background: var(--accent); color: white; border: none; padding: 2px 8px; font-size: 10px; cursor: pointer; border-radius: 3px; margin-left: 10px; text-transform: uppercase; }
-        #timer-display { border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.7rem; display: none; text-align: center; }
-        #poh-box { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; display: none; background: #000; }
-        .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .poh-cell { background: #111; border: 1px solid #222; padding: 10px; cursor: pointer; text-align: center; font-size: 1.2rem; }
-        .target { background: #111; padding: 10px; color: var(--accent); border: 1px dashed #444; margin-bottom: 10px; font-family: 'Unbounded'; font-size: 0.8rem; text-align: center; }
+        .btn-max { background: var(--accent); color: white; border: none; padding: 4px 8px; font-size: 10px; cursor: pointer; border-radius: 3px; margin-left: 10px; }
         #debug-console { font-size: 10px; color: #00ff41; font-family: monospace; text-align: left; margin-top: 20px; background: #050505; padding: 10px; border: 1px solid #111; max-height: 120px; overflow-y: auto; }
+        input { background: #000; border: none; border-bottom: 1px solid #333; color: #fff; padding: 10px; width: 95%; font-size: 1.2rem; outline: none; }
         .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'Unbounded'; font-size: 10px; color: #444; }
         .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'Unbounded'; font-size: 10px; color: var(--accent); }
     </style>
@@ -29,186 +25,143 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ALPHA 1.1.1</div>
+<div class="f-left">ALPHA 1.1.2</div>
 <div class="f-right">POWERED BY POLKADOT PASEO HUB</div>
 
 <div class="container">
     <h1>Rabbit Swap X</h1>
-    <div class="tagline">System Liquidity & Conversion</div>
+    <div class="tagline">System Liquidity & Direct Swap</div>
 
     <div id="setup-screen" style="max-width: 400px; margin: 0 auto;">
-        <button class="btn" onclick="forceNetwork()">1. Sync Network (422)</button>
+        <button class="btn" onclick="forceNetwork()">1. Sync Network</button>
         <button class="btn btn-outline" onclick="forceConnect()">2. Link Terminal</button>
     </div>
 
     <div id="terminal-screen" style="display:none; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="module">
-            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase; margin-bottom: 10px; display: block;">Module_01 // Extractions</span>
-            <div id="timer-display"></div>
-            <button class="btn btn-outline" id="btn-check" onclick="manualCheckCooldown()">Inspect Cooldown</button>
-            <div id="poh-box">
+            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase;">Module_01 // Extraction</span>
+            <button class="btn btn-outline" style="margin-top:20px;" onclick="manualCheckCooldown()">Inspect Cooldown</button>
+            <div id="poh-box" style="display:none; margin-top:15px;">
                 <div class="target" id="poh-display">----</div>
-                <div class="poh-grid" id="poh-grid"></div>
+                <div id="poh-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;"></div>
             </div>
             <button class="btn" id="btn-claim" style="display:none;" onclick="manualClaim()">Execute claimToken</button>
         </div>
 
         <div class="module">
-            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase; margin-bottom: 10px; display: block;">Module_02 // Conversion</span>
+            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase;">Module_02 // Swap</span>
+            <div style="margin: 20px 0; background: #000; padding: 10px;">
+                <label style="font-size: 9px; color: #555;"><span id="label-from">HOPx</span> <button class="btn-max" onclick="setMax()">MAX</button></label>
+                <div style="font-size: 11px;">Bal: <span id="bal-from" style="color:var(--accent);">0.00</span></div>
+                <input type="number" id="swap-in" placeholder="0.0" oninput="updateEstimate(this.value)">
+            </div>
             
-            <div style="background: #000; padding: 15px; border: 1px solid #111;">
-                <label style="font-size: 9px; color: #555;">FROM: <span id="label-from">HOPx</span> <button class="btn-max" onclick="setMax()">MAX</button></label>
-                <div style="font-size: 11px; margin-top: 5px;">Wallet: <span id="bal-from" style="color:var(--accent);">0.00</span></div>
-                <input type="number" id="swap-in" placeholder="0.0" style="background:#000; border:none; border-bottom:1px solid #333; color:#fff; padding:10px; width:95%; font-size: 1.2rem;" oninput="updateEstimate(this.value)">
+            <button class="btn-outline" style="width:100%; margin:5px 0; font-size:12px;" onclick="toggleDirection()">⇅ INVERT DIRECTION ⇅</button>
+
+            <div style="margin: 10px 0; background: #000; padding: 10px;">
+                <label style="font-size: 9px; color: #555;"><span id="label-to">RABx</span></label>
+                <input type="number" id="swap-out" readonly style="color:var(--accent);">
             </div>
 
-            <div style="text-align: center; margin: 10px 0;">
-                <button class="btn-outline" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer;" onclick="toggleDirection()">⇅</button>
-            </div>
-
-            <div style="background: #000; padding: 15px; border: 1px solid #111;">
-                <label style="font-size: 9px; color: #555;">TO: <span id="label-to">RABx</span></label>
-                <div style="font-size: 11px; margin-top: 5px;">Wallet: <span id="bal-to" style="color:var(--accent);">0.00</span></div>
-                <input type="number" id="swap-out" readonly style="background:#000; border:none; color:var(--accent); padding:10px; width:95%; font-size: 1.2rem;">
-            </div>
-
-            <button class="btn btn-outline" id="btn-approve" style="margin-top:15px;" onclick="manualApprove()">Authorize Conversion</button>
-            <button class="btn" id="btn-swap" style="display:none; margin-top:15px;" onclick="manualSwap()">Execute Swap</button>
+            <button class="btn" id="btn-execute-swap" onclick="executeAdvancedSwap()">Execute Conversion</button>
         </div>
     </div>
-
-    <div id="debug-console">>> BOOT...</div>
+    <div id="debug-console">>> SYSTEM_READY</div>
 </div>
 
 <script>
-    // --- CANVAS ---
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-    function init() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; for (let i = 0; i < 70; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 }); }
+    // --- BG ---
+    const canvas = document.getElementById('bg-canvas'); const ctx = canvas.getContext('2d'); let particles = [];
+    function init() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; for (let i = 0; i < 60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 }); }
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.2)"; particles.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
     init(); animate();
 
     // --- LOGIC ---
     const HOP_RAW = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
-    const RAB_RAW = "0x0000000000000000000000000000000000000000"; // INSERISCI INDIRIZZO RABX QUI
     const SWAP_RAW = "0x73bde75a9b1e0a13b76624a51371f78fe579d478";
-    
     let userAddr, isHopToRab = true;
 
     function dbg(m) { const c = document.getElementById('debug-console'); c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; }
     function safeAddr(a) { return ethers.utils.getAddress(a.toLowerCase()); }
 
     async function forceNetwork() {
-        try {
-            await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
-                chainId: '0x190bc416', chainName: 'Paseo Asset Hub',
-                nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
-                blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
-            }]});
-            dbg("NET_OK");
-        } catch (e) { dbg("NET_ERR"); }
+        try { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x190bc416', chainName: 'Paseo Asset Hub', nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 }, rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'] }]}); dbg("NET_OK"); } catch (e) { dbg("NET_ERR"); }
     }
 
     async function forceConnect() {
-        try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAddr = safeAddr(accounts[0]);
-            document.getElementById('setup-screen').style.display = 'none';
-            document.getElementById('terminal-screen').style.display = 'grid';
-            dbg("LINK_OK: " + userAddr.substring(0,10));
-            manualBalance();
-        } catch (e) { dbg("LINK_ERR"); }
+        try { const acc = await window.ethereum.request({ method: 'eth_requestAccounts' }); userAddr = safeAddr(acc[0]); document.getElementById('setup-screen').style.display='none'; document.getElementById('terminal-screen').style.display='grid'; refreshBalances(); dbg("LINK_OK"); } catch (e) { dbg("LINK_ERR"); }
     }
 
-    // SWAP UI LOGIC
+    async function refreshBalances() {
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const hop = new ethers.Contract(safeAddr(HOP_RAW), ["function balanceOf(address) view returns (uint256)"], provider);
+            const b = await hop.balanceOf(userAddr);
+            document.getElementById('bal-from').innerText = ethers.utils.formatEther(b);
+        } catch (e) { dbg("BAL_SYNC_ERR"); }
+    }
+
     function toggleDirection() {
         isHopToRab = !isHopToRab;
         document.getElementById('label-from').innerText = isHopToRab ? "HOPx" : "RABx";
         document.getElementById('label-to').innerText = isHopToRab ? "RABx" : "HOPx";
-        document.getElementById('swap-in').value = "";
-        document.getElementById('swap-out').value = "";
-        dbg("MODE: " + (isHopToRab ? "HOPx -> RABx" : "RABx -> HOPx"));
-    }
-
-    function updateEstimate(v) {
-        if(!v || v <= 0) return;
-        document.getElementById('swap-out').value = isHopToRab ? (v * 200) : (v / 200);
-    }
-
-    async function manualBalance() {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const hop = new ethers.Contract(safeAddr(HOP_RAW), ["function balanceOf(address) view returns (uint256)"], provider);
-            const bHop = await hop.balanceOf(userAddr);
-            document.getElementById('bal-from').innerText = ethers.utils.formatEther(bHop);
-            dbg("BALANCES_UPDATED");
-        } catch (e) { dbg("BAL_SCAN_ERR"); }
+        dbg("DIRECTION_CHANGED");
     }
 
     function setMax() {
-        const val = document.getElementById('bal-from').innerText;
-        document.getElementById('swap-in').value = val;
-        updateEstimate(val);
+        document.getElementById('swap-in').value = document.getElementById('bal-from').innerText;
+        updateEstimate(document.getElementById('swap-in').value);
     }
 
-    async function manualApprove() {
+    function updateEstimate(v) { document.getElementById('swap-out').value = isHopToRab ? (v * 200) : (v / 200); }
+
+    async function executeAdvancedSwap() {
         const val = document.getElementById('swap-in').value;
-        if(!val || val <= 0) return dbg("ERR: INVALID_AMOUNT");
-        
-        dbg("INIT_APPROVE...");
+        if(!val || val <= 0) return dbg("INPUT_REQUIRED");
+
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            // Utilizzo di una stringa ABI minima ed esatta per l'approvazione
-            const contract = new ethers.Contract(safeAddr(HOP_RAW), ["function approve(address spender, uint256 amount) public returns (bool)"], signer);
             
-            const tx = await contract.approve(safeAddr(SWAP_RAW), ethers.utils.parseEther(val.toString()));
-            dbg("PENDING_AUTH...");
-            await tx.wait();
-            document.getElementById('btn-approve').style.display = 'none';
-            document.getElementById('btn-swap').style.display = 'block';
-            dbg("AUTH_OK");
-        } catch (e) { 
-            dbg("APPROVE_FAIL: " + e.message.substring(0,50)); 
-            console.error(e);
-        }
+            if (isHopToRab) {
+                dbg("INIT_DIRECT_TRANSFER...");
+                // Usiamo sendToContract poiché HOPx non ha approve standard
+                const contract = new ethers.Contract(safeAddr(HOP_RAW), ["function sendToContract(address _target, uint256 _amount) external"], signer);
+                const tx = await contract.sendToContract(safeAddr(SWAP_RAW), ethers.utils.parseEther(val.toString()), { gasLimit: 200000 });
+                dbg("TX_PENDING: " + tx.hash.substring(0,12));
+                await tx.wait();
+                dbg("SWAP_SUCCESS");
+            } else {
+                dbg("BACK_SWAP_NOT_CONFIGURED");
+            }
+            refreshBalances();
+        } catch (e) { dbg("SWAP_ERR: " + e.message.substring(0,40)); }
     }
 
-    async function manualSwap() {
-        const val = document.getElementById('swap-in').value;
-        dbg("INIT_SWAP...");
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const contract = new ethers.Contract(safeAddr(SWAP_RAW), ["function swapHOPxforRABx(uint256 amount) external"], signer);
-            const tx = await contract.swapHOPxforRABx(ethers.utils.parseEther(val.toString()));
-            await tx.wait();
-            dbg("SWAP_SUCCESS");
-            manualBalance();
-        } catch (e) { dbg("SWAP_FAIL"); }
-    }
-
-    // (Il resto delle funzioni claim/cooldown rimangono le stesse della 1.1.0 per non rompere ciò che funziona)
+    // --- COOLDOWN & POH (REMAINING AS PER 1.1.0) ---
     async function manualCheckCooldown() {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(safeAddr(HOP_RAW), ["function lastClaim(address) view returns (uint256)"], provider);
-            const last = await contract.lastClaim(userAddr);
-            const now = Math.floor(Date.now() / 1000);
-            const next = parseInt(last) + 604800;
-            if (now < next && parseInt(last) !== 0) {
-                document.getElementById('timer-display').style.display = 'block';
-                showTimer(next);
-            } else { startPoh(); }
-        } catch (e) { dbg("SCAN_ERR"); }
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(safeAddr(HOP_RAW), ["function lastClaim(address) view returns (uint256)"], provider);
+        const last = await contract.lastClaim(userAddr);
+        if (Math.floor(Date.now()/1000) < (parseInt(last) + 604800) && parseInt(last) !== 0) { dbg("COOLDOWN_ACTIVE"); } else { startPoh(); }
     }
-    function showTimer(t) {
-        setInterval(() => {
-            const diff = t - Math.floor(Date.now() / 1000);
-            document.getElementById('timer-display').innerText = "COOLDOWN: " + diff + "s";
-        }, 1000);
+    function startPoh() {
+        document.getElementById('poh-box').style.display = 'block';
+        const icons = ['🐰', '🦊', '🌀', '💎', '⚡', '🔥'];
+        const sequence = icons.sort(() => 0.5 - Math.random()).slice(0, 4);
+        document.getElementById('poh-display').innerText = sequence.join(' ');
+        const grid = document.getElementById('poh-grid'); grid.innerHTML = '';
+        let step = 0;
+        icons.forEach(icon => {
+            const c = document.createElement('div'); c.innerText = icon; c.style = "background:#111; padding:10px; cursor:pointer; text-align:center;";
+            c.onclick = () => { if(icon === sequence[step]) { step++; c.style.opacity='0.2'; if(step===4){ document.getElementById('poh-box').style.display='none'; document.getElementById('btn-claim').style.display='block'; }} else { startPoh(); } };
+            grid.appendChild(c);
+        });
+    }
+    async function manualClaim() {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(safeAddr(HOP_RAW), ["function claimToken() external"], provider.getSigner());
+        const tx = await contract.claimToken(); await tx.wait(); dbg("CLAIM_OK"); location.reload();
     }
 </script>
 </body>
