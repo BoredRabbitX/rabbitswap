@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X // Terminal v2.2</title>
+    <title>Rabbit Swap X // Terminal v2.3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #000; --fg: #eee; --accent: #e6007a; --border: #1a1a1a; --gold: #ffcc00; }
-        body { background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; min-height: 100vh; }
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
         .main-wrapper { max-width: 1000px; margin: 0 auto; position: relative; z-index: 1; }
         .header-main { text-align: center; margin-bottom: 40px; border-bottom: 1px solid var(--accent); padding-bottom: 20px; }
@@ -19,7 +19,7 @@
         .module { background: rgba(5, 5, 5, 0.9); border: 1px solid var(--border); padding: 25px; border-radius: 4px; border-top: 4px solid var(--accent); }
         .btn { font-family: 'Unbounded'; background: var(--fg); color: #000; border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
         .btn:hover:not(:disabled) { background: var(--accent); color: white; }
-        #status-log { font-size: 0.7rem; color: #00ff41; text-align: center; margin-top: 30px; border-top: 1px solid #111; padding-top: 20px; }
+        #status-log { font-size: 0.7rem; color: #00ff41; text-align: center; margin-top: 30px; border-top: 1px solid #111; padding-top: 20px; background: rgba(0,255,65,0.05); }
         .bal-link { color: var(--accent); cursor: pointer; text-decoration: underline; font-weight: bold; }
         .input-group { margin-top: 15px; }
         input { background: rgba(0,0,0,0.5); border: 1px solid #222; color: #fff; padding: 12px; width: calc(100% - 26px); font-family: 'JetBrains Mono'; outline: none; }
@@ -32,7 +32,7 @@
 <div class="main-wrapper">
     <div class="header-main">
         <h1>Rabbit Swap X</h1>
-        <div style="font-size: 0.7rem; color: var(--accent); letter-spacing: 3px;">AGGRESSIVE_SCAN // v2.2</div>
+        <div style="font-size: 0.7rem; color: var(--accent); letter-spacing: 3px;">FORCED_LINK // v2.3</div>
         <div id="setup-layer" class="auth-grid">
             <button class="btn" onclick="initConnection()">Link Wallet</button>
             <button class="btn" style="border:1px solid var(--gold); background:transparent; color:var(--gold);" onclick="switchNetwork()">Setup Paseo Hub</button>
@@ -43,15 +43,15 @@
         <div class="dual-container">
             <div class="module">
                 <span style="font-size:0.7rem; color:#555; text-transform:uppercase;">SYSTEM_01 // CLAIM</span>
-                <div id="claim-status" style="margin:15px 0; font-size:0.8rem; color:var(--accent)">READY_TO_SCAN</div>
-                <button class="btn" id="btn-claim" onclick="runClaim()">Execute Claim</button>
+                <div id="claim-status" style="margin:15px 0; font-size:0.8rem; color:var(--accent)">READY</div>
+                <button class="btn" onclick="runClaim()">Execute Claim</button>
             </div>
 
             <div class="module">
                 <span style="font-size:0.7rem; color:#555; text-transform:uppercase;">SYSTEM_02 // SWAP</span>
                 <div class="input-group">
                     <label style="font-size:0.6rem; color:#555; display:flex; justify-content:space-between;">
-                        YOUR WALLET <span style="color:var(--accent)">HOPx: <span class="bal-link" id="user-hop" onclick="refreshBal()">SCANNING...</span></span>
+                        MY WALLET <span style="color:var(--accent)">HOPx: <span class="bal-link" id="user-hop" onclick="refreshBal()">SCANNING...</span></span>
                     </label>
                     <input type="number" id="swap-in" placeholder="0.0" oninput="calcSwap(this.value)">
                 </div>
@@ -64,7 +64,7 @@
                 <button class="btn" id="btn-swap" style="display:none;" onclick="runSwap()">2. Swap Now</button>
             </div>
         </div>
-        <div id="status-log">>> TERMINAL_IDLE</div>
+        <div id="status-log">>> SYSTEM_IDLE...</div>
     </div>
 </div>
 
@@ -75,82 +75,92 @@
 
     let provider, signer, hopContract, swapContract, user;
 
-    // ABI ERC20 Standard più completa per evitare errori di lettura
-    const MIN_ABI = [
-        "function balanceOf(address owner) view returns (uint256)",
-        "function decimals() view returns (uint8)",
-        "function approve(address spender, uint256 value) returns (bool)",
-        "function claimToken() external"
-    ];
-
     async function initConnection() {
-        if(!window.ethereum) return updateLog("ERR: NO_METAMASK");
+        updateLog("ATTEMPTING_WALLET_LINK...");
+        if(!window.ethereum) return updateLog("ERR: METAMASK_NOT_FOUND");
         
         try {
+            // FORZA IL COLLEGAMENTO
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            user = accounts[0];
             provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const network = await provider.getNetwork();
+            signer = provider.getSigner();
 
-            if(network.chainId !== 420420422) {
-                updateLog("ERR: WRONG_NETWORK. SWITCH TO PASEO ASSET HUB.");
+            // VERIFICA RETE DOPO IL COLLEGAMENTO
+            const { chainId } = await provider.getNetwork();
+            if(chainId !== 420420422) {
+                updateLog("ERR: WRONG_NETWORK (CHAIN_ID: " + chainId + "). SWITCH TO PASEO ASSET HUB.");
+                document.getElementById('setup-layer').style.display = 'grid'; // Mantieni bottoni visibili
                 return;
             }
 
-            signer = provider.getSigner();
-            user = await signer.getAddress();
-
-            hopContract = new ethers.Contract(HOP_ADDR, MIN_ABI, signer);
-            swapContract = new ethers.Contract(SWAP_ADDR, ["function swapHOPxforRABx(uint256 nIn) external"], signer);
-
+            setupContracts();
             document.getElementById('setup-layer').style.display = 'none';
             document.getElementById('main-layer').style.display = 'block';
-            
-            updateLog("SYNCED: " + user.substring(0,10));
+            updateLog("LINK_SUCCESSFUL: " + user.substring(0,10));
             refreshBal();
-        } catch(e) { updateLog("ERR: CONNECTION_FAILED"); }
+        } catch(e) { 
+            console.error(e);
+            updateLog("ERR: USER_REJECTED_LINK"); 
+        }
+    }
+
+    function setupContracts() {
+        const abi = [
+            "function balanceOf(address owner) view returns (uint256)",
+            "function decimals() view returns (uint8)",
+            "function approve(address spender, uint256 value) returns (bool)",
+            "function claimToken() external"
+        ];
+        hopContract = new ethers.Contract(HOP_ADDR, abi, signer);
+        swapContract = new ethers.Contract(SWAP_ADDR, ["function swapHOPxforRABx(uint256 nIn) external"], signer);
     }
 
     async function refreshBal() {
         try {
-            document.getElementById('user-hop').innerText = "LOADING...";
-            // Usiamo una chiamata atomica per evitare timeout
+            updateLog("FETCHING_CONTRACT_DATA...");
             const balance = await hopContract.balanceOf(user);
-            const decimals = await hopContract.decimals();
-            const formatted = ethers.utils.formatUnits(balance, decimals);
-            
+            const dec = await hopContract.decimals();
+            const formatted = ethers.utils.formatUnits(balance, dec);
             document.getElementById('user-hop').innerText = parseFloat(formatted).toFixed(2);
-            updateLog("WALLET_SCAN_SUCCESSFUL");
+            updateLog("DATA_SYNC_COMPLETE");
         } catch(e) {
+            updateLog("ERR: DATA_FETCH_FAILED. IS ADDR CORRECT?");
             console.error(e);
-            updateLog("ERR: CONTRACT_READ_FAILED. CHECK CONTRACT ADDR.");
-            document.getElementById('user-hop').innerText = "0.00";
         }
     }
 
     async function runApprove() {
         try {
             const amount = document.getElementById('swap-in').value;
-            if(!amount || amount <= 0) return updateLog("ERR: INVALID_AMOUNT");
-            
-            updateLog("WAITING_FOR_APPROVAL...");
+            updateLog("AUTHORIZING_CONTRACT...");
             const tx = await hopContract.approve(SWAP_ADDR, ethers.utils.parseEther(amount));
             await tx.wait();
-            
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            updateLog("AUTH_OK. PROCEED TO SWAP.");
-        } catch(e) { updateLog("ERR: AUTH_REJECTED"); }
+            updateLog("AUTH_GRANTED");
+        } catch(e) { updateLog("ERR: AUTH_FAILED"); }
     }
 
     async function runSwap() {
         try {
             const amount = document.getElementById('swap-in').value;
-            updateLog("SWAPPING_ON_CHAIN...");
-            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(amount), { gasLimit: 500000 });
+            updateLog("EXECUTING_SWAP...");
+            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(amount), { gasLimit: 800000 });
             await tx.wait();
-            updateLog("SWAP_SUCCESSFUL!");
+            updateLog("SWAP_SUCCESS!");
             refreshBal();
         } catch(e) { updateLog("ERR: SWAP_FAILED"); }
+    }
+
+    async function runClaim() {
+        try {
+            updateLog("CLAIMING_TOKEN...");
+            const tx = await hopContract.claimToken({ gasLimit: 800000 });
+            await tx.wait();
+            updateLog("CLAIM_SUCCESS!");
+            refreshBal();
+        } catch(e) { updateLog("ERR: CLAIM_FAILED"); }
     }
 
     async function switchNetwork() {
@@ -161,29 +171,29 @@
                 rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
                 blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
             }]});
-        } catch(e) {}
+        } catch(e) { updateLog("ERR: NETWORK_CHANGE_FAILED"); }
     }
 
     function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
     function updateLog(m) { document.getElementById('status-log').innerText = ">> " + m; }
 
-    // --- BG Dots ---
+    // BG Anim
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let dots = [];
-    function initDots() {
+    function init() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         dots = []; for(let i=0; i<60; i++) dots.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
     }
     function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(230,0,122,0.5)";
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(230,0,122,0.4)";
         dots.forEach(d => {
             d.x += d.vx; d.y += d.vy; if(d.x<0||d.x>canvas.width) d.vx*=-1; if(d.y<0||d.y>canvas.height) d.vy*=-1;
             ctx.beginPath(); ctx.arc(d.x, d.y, 1.5, 0, Math.PI*2); ctx.fill();
         });
         requestAnimationFrame(animate);
     }
-    initDots(); animate();
+    init(); animate();
 </script>
 </body>
 </html>
