@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.1.9</title>
+    <title>Rabbit Swap X | Alpha 1.2.7</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -34,7 +34,6 @@
 
         #debug-console { font-size: 10px; color: #555; font-family: monospace; text-align: left; margin-top: 25px; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 6px; max-height: 80px; overflow-y: auto; border: 1px solid #111; }
         
-        /* Diciture Angoli */
         .f-left { position: fixed; bottom: 25px; left: 30px; font-family: 'Unbounded'; font-size: 9px; color: #444; letter-spacing: 1px; }
         .f-right { position: fixed; bottom: 25px; right: 30px; font-family: 'Unbounded'; font-size: 9px; color: var(--accent); letter-spacing: 1px; }
         
@@ -44,7 +43,7 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ESTABLISHED // ALPHA 1.1.9</div>
+<div class="f-left">ESTABLISHED // ALPHA 1.2.7</div>
 <div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
 <div class="container">
@@ -83,7 +82,10 @@
                 <button onclick="toggleDirection()" style="background:#000; border:1px solid #333; color:#fff; border-radius:50%; width:34px; height:34px; cursor:pointer; font-size:14px; transition:0.2s">⇅</button>
             </div>
             <div class="swap-box">
-                <span style="font-size:10px; color:#555" id="label-to">TO: RABx</span>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:#555">
+                    <span id="label-to">TO: RABx</span>
+                    <span>Pool: <span id="res-pool" style="color:#666">0.00</span></span>
+                </div>
                 <input type="number" class="swap-input" id="swap-out" readonly placeholder="0.0" style="color:var(--accent)">
             </div>
             <button class="btn btn-outline" style="margin-top:5px" onclick="executeSwap()">Execute Conversion</button>
@@ -112,7 +114,7 @@
             for(let j=i+1; j<pts.length; j++) {
                 let d = Math.hypot(p.x-pts[j].x, p.y-pts[j].y);
                 if(d<130) {
-                    ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`; // Linee magenta
+                    ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`;
                     ctx.lineWidth = 0.8;
                     ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
                 }
@@ -122,23 +124,24 @@
     }
     init(); animate(); window.onresize = init;
 
-    // --- BLOCKCHAIN ENGINE ---
-    const HOP_RAW = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
-    const SWAP_RAW = "0x73bde75a9b1e0a13b76624a51371f78fe579d478";
+    // --- BLOCKCHAIN CONFIG ---
+    const HOP_RAW = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
+    const RAB_RAW = "0xb28c695683eB22A06dD2D1e70bDA8E915Eb0bc12";
+    const SWAP_RAW = "0xAe2B93BCcdeBf437aD00fd19cA46060Ba145Deb2";
+    
     let userAddr, isHopToRab = true;
-
     const dbg = (m) => { const c = document.getElementById('debug-console'); c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; };
-    const safe = (a) => ethers.utils.getAddress(a.toLowerCase());
+    const safe = (a) => ethers.utils.getAddress(a);
 
     async function forceNetwork() {
         try { await window.ethereum.request({method:'wallet_addEthereumChain', params:[{chainId:'0x190bc416', chainName:'Paseo Asset Hub', nativeCurrency:{name:'PAS', symbol:'PAS', decimals:18}, rpcUrls:['https://testnet-passet-hub-eth-rpc.polkadot.io']}]}); dbg("NETWORK_LOCKED"); } catch(e){ dbg("NET_ERR"); }
     }
 
     async function forceConnect() {
-        try { const acc = await window.ethereum.request({method:'eth_requestAccounts'}); userAddr = safe(acc[0]); document.getElementById('setup-screen').style.display='none'; document.getElementById('terminal-screen').style.display='grid'; refreshBal(); dbg("BRIDGE_ESTABLISHED: " + userAddr.substring(0,10)); } catch(e){ dbg("CONN_ERR"); }
+        try { const acc = await window.ethereum.request({method:'eth_requestAccounts'}); userAddr = safe(acc[0]); document.getElementById('setup-screen').style.display='none'; document.getElementById('terminal-screen').style.display='grid'; refreshData(); dbg("BRIDGE_ESTABLISHED: " + userAddr.substring(0,10)); } catch(e){ dbg("CONN_ERR"); }
     }
 
-    // --- CLAIM CYCLE ---
+    // --- MODULE 01: CLAIM (RESTORED) ---
     async function handleClaimCycle() {
         dbg("INSPECTING_COOLDOWN...");
         try {
@@ -191,47 +194,75 @@
         } catch(e) { dbg("CLAIM_REVERTED"); }
     }
 
-    // --- SWAP ENGINE ---
-    async function refreshBal() {
+    // --- MODULE 02: SWAP (NEW ENGINE) ---
+    async function refreshData() {
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const hop = new ethers.Contract(safe(HOP_RAW), ["function balanceOf(address) view returns (uint256)"], provider);
-            const b = await hop.balanceOf(userAddr);
+            const tokenInAddr = isHopToRab ? HOP_RAW : RAB_RAW;
+            
+            const tokenIn = new ethers.Contract(safe(tokenInAddr), ["function balanceOf(address) view returns (uint256)"], provider);
+            const b = await tokenIn.balanceOf(userAddr);
             document.getElementById('bal-from').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
-        } catch(e) { dbg("BAL_ERR"); }
+
+            const swap = new ethers.Contract(safe(SWAP_RAW), ["function res() external view returns (uint256 h, uint256 r)"], provider);
+            const reserves = await swap.res();
+            const poolVal = isHopToRab ? reserves.r : reserves.h;
+            document.getElementById('res-pool').innerText = parseFloat(ethers.utils.formatEther(poolVal)).toFixed(2);
+        } catch(e) { dbg("SYNC_ERR"); }
     }
 
     function setMax() { document.getElementById('swap-in').value = document.getElementById('bal-from').innerText; updateEstimate(document.getElementById('swap-in').value); }
-    function updateEstimate(v) { document.getElementById('swap-out').value = isHopToRab ? (v*200).toFixed(2) : (v/200).toFixed(5); }
-    function toggleDirection() { isHopToRab = !isHopToRab; document.getElementById('label-from').innerText = isHopToRab ? "FROM: HOPx" : "FROM: RABx"; document.getElementById('label-to').innerText = isHopToRab ? "TO: RABx" : "TO: HOPx"; }
+    
+    function updateEstimate(v) { 
+        if(!v || v == 0) { document.getElementById('swap-out').value = ""; return; }
+        document.getElementById('swap-out').value = isHopToRab ? (v*200).toFixed(2) : (v/200).toFixed(5); 
+    }
+
+    function toggleDirection() { 
+        isHopToRab = !isHopToRab; 
+        document.getElementById('label-from').innerText = isHopToRab ? "FROM: HOPx" : "FROM: RABx"; 
+        document.getElementById('label-to').innerText = isHopToRab ? "TO: RABx" : "TO: HOPx";
+        document.getElementById('swap-in').value = "";
+        document.getElementById('swap-out').value = "";
+        refreshData();
+    }
 
     async function executeSwap() {
         const val = document.getElementById('swap-in').value;
         if(!val || val <= 0) return;
+        
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const amount = ethers.utils.parseEther(val.toString());
-            
-            dbg("CHECKING_ALLOWANCE...");
-            const hop = new ethers.Contract(safe(HOP_RAW), ["function approve(address s, uint256 a) public returns (bool)", "function allowance(address o, address s) view returns (uint256)"], signer);
-            const allow = await hop.allowance(userAddr, safe(SWAP_RAW));
-            
-            if(allow.lt(amount)) {
-                dbg("AUTHORIZING_CONTRACT...");
-                const txA = await hop.approve(safe(SWAP_RAW), amount, {gasLimit: 120000});
+            const tokenInAddr = isHopToRab ? HOP_RAW : RAB_RAW;
+
+            dbg("CHECKING_PERMISSIONS...");
+            const token = new ethers.Contract(safe(tokenInAddr), ["function approve(address s, uint256 a) public returns (bool)", "function allowance(address o, address s) view returns (uint256)"], signer);
+            const allowance = await token.allowance(userAddr, safe(SWAP_RAW));
+
+            if(allowance.lt(amount)) {
+                dbg("STEP 1/2: AUTHORIZING_ASSETS...");
+                const txA = await token.approve(safe(SWAP_RAW), ethers.constants.MaxUint256);
                 await txA.wait();
-                dbg("AUTH_GRANTED");
+                dbg("AUTH_SUCCESS");
             }
-            
-            dbg("EXECUTING_SWAP...");
-            const swap = new ethers.Contract(safe(SWAP_RAW), ["function swapHOPxforRABx(uint256 a) external"], signer);
-            const txS = await swap.swapHOPxforRABx(amount, {gasLimit: 300000});
+
+            dbg("STEP 2/2: EXECUTING_CONVERSION...");
+            const swap = new ethers.Contract(safe(SWAP_RAW), [
+                "function swapIn(uint256 a) external",
+                "function swapOut(uint256 a) external"
+            ], signer);
+
+            const txS = isHopToRab ? await swap.swapIn(amount) : await swap.swapOut(amount);
+            dbg("PENDING_CONFIRMATION...");
             await txS.wait();
-            dbg("SWAP_SUCCESSFUL"); refreshBal();
-        } catch(e){ 
+            
+            dbg("CONVERSION_COMPLETE");
+            refreshData();
+        } catch(e) {
             console.error(e);
-            dbg("ERR: CHECK_LIQUIDITY"); 
+            dbg("ERR: TRANSACTION_FAILED");
         }
     }
 </script>
