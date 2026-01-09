@@ -3,209 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabbitSwap | HOP Terminal Alpha</title>
+    <title>RabbitSwap | HOP Terminal Alpha 0.0.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root { --bg: #050505; --fg: #ffffff; --accent: #e6007a; --border: #222; --card: #0a0a0a; }
         body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
-        
-        .container { width: 100%; max-width: 420px; padding: 30px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; }
-        
-        .header { text-align: left; margin-bottom: 30px; border-left: 4px solid var(--accent); padding-left: 15px; }
-        h1 { font-family: 'Unbounded', sans-serif; font-size: 1.8rem; margin: 0; text-transform: uppercase; }
-        .version { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); background: rgba(230, 0, 122, 0.1); padding: 2px 6px; border-radius: 4px; }
-        
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.2; }
+        .container { width: 100%; max-width: 420px; padding: 30px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; position: relative; border-top: 4px solid var(--accent); }
+        .header { text-align: left; margin-bottom: 25px; }
+        h1 { font-family: 'Unbounded', sans-serif; font-size: 1.5rem; margin: 0; }
+        .version { font-family: 'JetBrains Mono'; font-size: 0.6rem; color: var(--accent); }
         .swap-box { background: #000; border: 1px solid var(--border); padding: 20px; border-radius: 8px; margin-bottom: 15px; }
-        .input-group { margin-bottom: 15px; text-align: left; position: relative; }
-        label { font-size: 0.65rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; display: flex; justify-content: space-between; }
-        .balance-tag { color: var(--accent); font-family: 'JetBrains Mono'; cursor: pointer; }
-        
-        input { background: transparent; border: none; color: white; font-family: 'Unbounded'; font-size: 1.2rem; width: 100%; outline: none; padding: 10px 0; border-bottom: 1px solid #111; }
-        input:focus { border-color: var(--accent); }
-        
+        label { font-size: 0.65rem; color: #666; text-transform: uppercase; display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .balance-tag { color: var(--accent); cursor: pointer; }
+        input { background: transparent; border: none; color: white; font-family: 'Unbounded'; font-size: 1.2rem; width: 100%; outline: none; padding: 5px 0; border-bottom: 1px solid #111; }
         .rate-info { font-size: 0.7rem; color: #444; margin: 10px 0; font-family: 'JetBrains Mono'; text-align: center; }
-
-        .btn { font-family: 'Unbounded', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; border-radius: 6px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
-        .btn:hover { background: var(--accent); color: white; transform: translateY(-2px); }
+        .btn { font-family: 'Unbounded'; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; border-radius: 6px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.2s; margin-top: 10px; }
+        .btn:hover { background: var(--accent); color: white; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-
-        #status { margin-top: 20px; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #555; text-transform: uppercase; text-align: center; height: 15px; }
-        
-        .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: #333; }
-        .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent); }
+        #status { margin-top: 15px; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #e6007a; text-align: center; min-height: 1.2em; }
+        .f-left, .f-right { position: fixed; bottom: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: #333; }
+        .f-left { left: 20px; } .f-right { right: 20px; color: var(--accent); }
     </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
 <div class="f-left">PASEO ASSET HUB</div>
-<div class="f-right">ALPHA 0.0.1 // RABBITSWAP</div>
+<div class="f-right">V. 0.0.2 ALPHA</div>
 
 <div class="container">
     <div class="header">
-        <h1>RabbitSwap <span class="version">v0.0.1-a</span></h1>
-        <div style="font-size: 0.7rem; color: #555; margin-top: 5px;">Fixed Rate: 1 HOP = 200 RAB</div>
+        <h1>RabbitSwap</h1>
+        <div class="version">BUILD_ID: 2026.01.09_FIX_GAS</div>
     </div>
 
     <div id="panel-connect">
-        <button class="btn" onclick="connect()">Connect Wallet</button>
-        <button class="btn btn-outline" onclick="addNetwork()">Setup Paseo Network</button>
+        <button class="btn" onclick="connect()">Connect Terminal</button>
     </div>
 
     <div id="panel-swap" style="display: none;">
         <div class="swap-box">
             <div class="input-group">
-                <label>
-                    Send (HOP) 
-                    <span class="balance-tag" onclick="setMax()">BAL: <span id="val-hop-bal">0.00</span></span>
-                </label>
+                <label>Send (HOP) <span class="balance-tag" onclick="setMax()">BAL: <span id="val-hop-bal">0.00</span></span></label>
                 <input type="number" id="input-hop" placeholder="0.0" oninput="calculateSwap(this.value)">
             </div>
-            <div class="rate-info">↓ 1:200 FIXED RATE</div>
+            <div class="rate-info">↓ FIXED 1:200</div>
             <div class="input-group">
                 <label>Receive (RAB)</label>
                 <input type="number" id="output-rab" placeholder="0.0" readonly>
             </div>
         </div>
         
-        <button class="btn" id="btn-approve" onclick="approveHOP()">1. Approve HOP</button>
-        <button class="btn" id="btn-swap" onclick="swap()" style="display:none;">2. Swap for RAB</button>
-        <button class="btn btn-outline" onclick="addRABToken()">Add RAB to Wallet</button>
+        <div id="action-buttons">
+            <button class="btn" id="btn-approve" onclick="approveHOP()">Approve Contract</button>
+            <button class="btn" id="btn-swap" onclick="swap()" style="display:none;">Swap Now</button>
+        </div>
+        <button class="btn btn-outline" style="font-size: 0.6rem; padding: 10px;" onclick="addRABToken()">Import RAB to MetaMask</button>
     </div>
 
-    <div id="status">Terminal Offline</div>
+    <div id="status">INIT_READY...</div>
 </div>
 
 <script>
-    // BG Dots
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let dots = [];
-    function init() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        dots = []; for (let i = 0; i < 60; i++) {
-            dots.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: 1, vx: Math.random()-0.5, vy: Math.random()-0.5 });
-        }
-    }
-    function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "#333";
-        dots.forEach(d => { d.x += d.vx; d.y += d.vy; if(d.x<0||d.x>canvas.width) d.vx*=-1; if(d.y<0||d.y>canvas.height) d.vy*=-1; ctx.beginPath(); ctx.arc(d.x,d.y,d.size,0,Math.PI*2); ctx.fill(); });
-        requestAnimationFrame(animate);
-    }
-    init(); animate();
-
-    // CHAIN CONSTANTS
     const HOP_ADDR = "0x2edD59d82e3F701d4f9644aB241eFAF53B21FbfE";
-    const SWAP_ADDR = "0x8db092bE8A4baf621BeC94957aEba1e26d607a1a"; 
-    
-    const ERC20_ABI = [
-        "function approve(address spender, uint256 amount) returns (bool)",
-        "function balanceOf(address) view returns (uint256)",
-        "function allowance(address, address) view returns (uint256)"
-    ];
-    const SWAP_ABI = [
-        "function swapHOPforRAB(uint256 amount) external"
-    ];
+    const SWAP_ADDR = "0x8db092bE8A4baf621BeC94957aEba1e26d607a1a";
+    const PASEO_CHAIN_ID = "0x190bc416";
 
     let provider, signer, hopContract, swapContract, userAccount;
     let rawBalance = "0";
 
     async function connect() {
-        if (!window.ethereum) return updateStatus("MetaMask Missing");
+        if (!window.ethereum) return updateStatus("ERR_NO_METAMASK");
         try {
+            // Force Paseo Network Check
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (chainId !== PASEO_CHAIN_ID) {
+                updateStatus("WRONG_NETWORK: SWITCHING...");
+                await addNetwork();
+            }
+
             provider = new ethers.providers.Web3Provider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
             signer = provider.getSigner();
             userAccount = await signer.getAddress();
             
-            hopContract = new ethers.Contract(HOP_ADDR, ERC20_ABI, signer);
-            swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, signer);
+            hopContract = new ethers.Contract(HOP_ADDR, ["function approve(address,uint256) returns (bool)", "function balanceOf(address) view returns (uint256)", "function allowance(address,address) view returns (uint256)"], signer);
+            swapContract = new ethers.Contract(SWAP_ADDR, ["function swapHOPforRAB(uint256) external"], signer);
 
             await updateBalance();
-            
             document.getElementById('panel-connect').style.display = 'none';
             document.getElementById('panel-swap').style.display = 'block';
-            updateStatus("Wallet: " + userAccount.substring(0,6) + "...");
-        } catch (e) { updateStatus("Connection Error"); }
+            updateStatus("TERMINAL_ONLINE: " + userAccount.substring(0,8));
+        } catch (e) { updateStatus("AUTH_FAILED: " + e.code); }
     }
 
     async function updateBalance() {
         const bal = await hopContract.balanceOf(userAccount);
         rawBalance = bal;
-        const formatted = ethers.utils.formatEther(bal);
-        document.getElementById('val-hop-bal').innerText = parseFloat(formatted).toFixed(2);
-    }
-
-    function setMax() {
-        const formatted = ethers.utils.formatEther(rawBalance);
-        document.getElementById('input-hop').value = formatted;
-        calculateSwap(formatted);
+        document.getElementById('val-hop-bal').innerText = ethers.utils.formatEther(bal);
     }
 
     function calculateSwap(val) {
-        if(!val || val < 0) {
-            document.getElementById('output-rab').value = "";
-            return;
-        }
-        document.getElementById('output-rab').value = (val * 200).toLocaleString();
-        
-        // Dynamic Check
-        const inputWei = ethers.utils.parseEther(val.toString());
-        if (inputWei.gt(rawBalance)) {
-            updateStatus("Insufficient HOP Balance");
-        } else {
-            updateStatus("Rate Verified");
-        }
+        if(!val || val <= 0) return document.getElementById('output-rab').value = "";
+        document.getElementById('output-rab').value = (val * 200).toFixed(2);
     }
 
     async function approveHOP() {
         try {
             const val = document.getElementById('input-hop').value;
-            if(!val) return updateStatus("Enter Amount");
-            updateStatus("Waiting for Approval...");
-            const amount = ethers.utils.parseEther(val);
-            const tx = await hopContract.approve(SWAP_ADDR, amount);
+            if(!val || val <= 0) return updateStatus("INPUT_REQUIRED");
+            
+            updateStatus("WAITING_FOR_USER_CONFIRMATION...");
+            const amount = ethers.utils.parseEther(val.toString());
+            
+            // Gas logic fix: Manually set gasPrice for Paseo Asset Hub
+            const tx = await hopContract.approve(SWAP_ADDR, amount, {
+                gasLimit: 100000
+            });
+            
+            updateStatus("TRANSACTION_MINING...");
             await tx.wait();
+            
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            updateStatus("Approval Successful");
-        } catch (e) { updateStatus("Approval Rejected"); }
+            updateStatus("APPROVAL_SUCCESSFUL");
+        } catch (e) {
+            console.error(e);
+            updateStatus(e.code === 4001 ? "USER_REJECTED_TX" : "ERR_APPROVAL_PROCESS");
+        }
     }
 
     async function swap() {
         try {
-            updateStatus("Swapping...");
+            updateStatus("EXECUTING_PROTOCOL...");
             const amount = ethers.utils.parseEther(document.getElementById('input-hop').value);
-            const tx = await swapContract.swapHOPforRAB(amount, { gasLimit: 500000 });
+            
+            // Higher gas limit for Paseo PolkaVM
+            const tx = await swapContract.swapHOPforRAB(amount, { gasLimit: 350000 });
             await tx.wait();
-            updateStatus("Success! RAB Received");
+            updateStatus("SWAP_FINALIZED: RAB_SENT");
             await updateBalance();
-            setTimeout(() => location.reload(), 3000);
-        } catch (e) { updateStatus("Swap Failed"); }
+            setTimeout(() => { location.reload(); }, 3000);
+        } catch (e) { updateStatus("TX_FAILED: CHECK_GAS"); }
+    }
+
+    function setMax() {
+        const val = ethers.utils.formatEther(rawBalance);
+        document.getElementById('input-hop').value = val;
+        calculateSwap(val);
+    }
+
+    function updateStatus(msg) { document.getElementById('status').innerText = msg; }
+
+    async function addNetwork() {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                    chainId: PASEO_CHAIN_ID,
+                    chainName: 'Paseo Asset Hub',
+                    nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
+                    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
+                    blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
+                }]
+            });
+        } catch (e) { updateStatus("NET_SWITCH_ERR"); }
     }
 
     async function addRABToken() {
         await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
             type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RAB', decimals: 18 } 
         }});
-    }
-
-    function updateStatus(msg) { document.getElementById('status').innerText = msg; }
-    
-    async function addNetwork() {
-        await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-                chainId: '0x190bc416',
-                chainName: 'Paseo Asset Hub',
-                nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
-                blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
-            }]
-        });
     }
 </script>
 </body>
