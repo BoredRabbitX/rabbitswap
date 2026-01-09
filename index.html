@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.1.8</title>
+    <title>Rabbit Swap X | Alpha 1.1.9</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #030303; --fg: #ffffff; --accent: #e6007a; --border: #1a1a1a; --card: rgba(10, 10, 10, 0.8); }
+        :root { --bg: #030303; --fg: #ffffff; --accent: #e6007a; --border: #1a1a1a; --card: rgba(10, 10, 10, 0.85); }
         body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
         
@@ -15,52 +15,63 @@
         .tagline { font-size: 0.7rem; color: var(--accent); letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase; opacity: 0.8; }
 
         .dual-grid { display: none; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .module { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; backdrop-filter: blur(15px); text-align: left; position: relative; border-top: 3px solid var(--accent); }
+        .module { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; backdrop-filter: blur(15px); text-align: left; position: relative; border-top: 3px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; border-radius: 6px; }
+        .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; border-radius: 6px; transition: 0.2s; }
+        .btn:hover { background: #ddd; transform: translateY(-1px); }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid #333; }
-        .btn-max { background: var(--accent); color: #fff; border: none; padding: 3px 8px; font-size: 9px; border-radius: 4px; cursor: pointer; }
+        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-max { background: var(--accent); color: #fff; border: none; padding: 3px 8px; font-size: 9px; border-radius: 4px; cursor: pointer; margin-left: 5px; }
 
-        .swap-box { background: rgba(0,0,0,0.5); border: 1px solid #151515; padding: 12px; border-radius: 8px; margin: 10px 0; }
-        .swap-input { background: transparent; border: none; color: #fff; font-size: 1.3rem; width: 100%; outline: none; font-family: 'Unbounded'; }
+        .swap-box { background: rgba(0,0,0,0.6); border: 1px solid #1a1a1a; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .swap-input { background: transparent; border: none; color: #fff; font-size: 1.4rem; width: 100%; outline: none; font-family: 'Unbounded'; margin-top: 5px; }
 
         #poh-container { display: none; margin-top: 15px; }
         .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .poh-cell { background: #111; border: 1px solid #222; padding: 10px; cursor: pointer; font-size: 1.2rem; border-radius: 6px; text-align: center; }
-        .target-seq { font-family: 'Unbounded'; font-size: 0.8rem; color: var(--accent); text-align: center; background: #111; padding: 8px; border: 1px dashed #333; }
+        .poh-cell { background: #111; border: 1px solid #222; padding: 12px; cursor: pointer; font-size: 1.3rem; border-radius: 6px; text-align: center; transition: 0.2s; }
+        .poh-cell:hover { background: #222; border-color: var(--accent); }
+        .target-seq { font-family: 'Unbounded'; font-size: 0.8rem; color: var(--accent); text-align: center; background: #000; padding: 10px; border: 1px dashed #333; border-radius: 4px; }
 
-        #debug-console { font-size: 10px; color: #444; font-family: monospace; text-align: left; margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 6px; max-height: 60px; overflow-y: auto; }
-        #countdown-display { color: #ff3e3e; font-family: 'Unbounded'; font-size: 0.8rem; text-align: center; display: none; padding: 10px; border: 1px solid #300; }
+        #debug-console { font-size: 10px; color: #555; font-family: monospace; text-align: left; margin-top: 25px; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 6px; max-height: 80px; overflow-y: auto; border: 1px solid #111; }
+        
+        /* Diciture Angoli */
+        .f-left { position: fixed; bottom: 25px; left: 30px; font-family: 'Unbounded'; font-size: 9px; color: #444; letter-spacing: 1px; }
+        .f-right { position: fixed; bottom: 25px; right: 30px; font-family: 'Unbounded'; font-size: 9px; color: var(--accent); letter-spacing: 1px; }
+        
+        #countdown-display { color: #ff3e3e; font-family: 'Unbounded'; font-size: 0.75rem; text-align: center; display: none; padding: 15px; border: 1px solid #300; background: rgba(50,0,0,0.2); border-radius: 6px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
+<div class="f-left">ESTABLISHED // ALPHA 1.1.9</div>
+<div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
 <div class="container">
     <h1>Rabbit Swap X</h1>
     <div class="tagline">Neural Network Extraction</div>
 
-    <div id="setup-screen" style="max-width: 350px; margin: 0 auto;">
+    <div id="setup-screen" style="max-width: 380px; margin: 0 auto;">
         <button class="btn" style="margin-bottom:12px" onclick="forceNetwork()">1. Sync Network</button>
         <button class="btn btn-outline" onclick="forceConnect()">2. Link Terminal</button>
     </div>
 
     <div id="terminal-screen" class="dual-grid">
         <div class="module">
-            <span style="font-size:0.6rem; color:#444; letter-spacing:2px">MODULE_01 // CLAIM</span>
+            <span style="font-size:0.6rem; color:#444; letter-spacing:2px; font-weight:700">MODULE_01 // EXTRACTION</span>
             <div id="countdown-display"></div>
-            <button class="btn" id="btn-claim-init" style="margin-top:15px" onclick="handleClaimCycle()">Claim your HOPx</button>
+            <button class="btn" id="btn-claim-init" style="margin-top:20px" onclick="handleClaimCycle()">Claim your HOPx</button>
             
             <div id="poh-container">
+                <div style="font-size: 9px; color: #444; margin-bottom: 8px; text-transform: uppercase;">Verify Identity:</div>
                 <div class="target-seq" id="poh-display">----</div>
                 <div class="poh-grid" id="poh-grid"></div>
             </div>
-            <button class="btn" id="btn-final-claim" style="display:none; background:var(--accent); color:#fff" onclick="executeClaim()">Execute Extraction</button>
+            <button class="btn" id="btn-final-claim" style="display:none; background:var(--accent); color:#fff; margin-top:15px" onclick="executeClaim()">Execute Extraction</button>
         </div>
 
         <div class="module">
-            <span style="font-size:0.6rem; color:#444; letter-spacing:2px">MODULE_02 // SWAP</span>
+            <span style="font-size:0.6rem; color:#444; letter-spacing:2px; font-weight:700">MODULE_02 // CONVERSION</span>
             <div class="swap-box">
                 <div style="display:flex; justify-content:space-between; font-size:10px; color:#555">
                     <span id="label-from">FROM: HOPx</span>
@@ -68,41 +79,41 @@
                 </div>
                 <input type="number" class="swap-input" id="swap-in" placeholder="0.0" oninput="updateEstimate(this.value)">
             </div>
-            <div style="text-align:center; margin:-10px 0; z-index:2; position:relative">
-                <button onclick="toggleDirection()" style="background:#000; border:1px solid #222; color:#fff; border-radius:50%; width:30px; height:30px; cursor:pointer">⇅</button>
+            <div style="text-align:center; margin:-12px 0; z-index:5; position:relative">
+                <button onclick="toggleDirection()" style="background:#000; border:1px solid #333; color:#fff; border-radius:50%; width:34px; height:34px; cursor:pointer; font-size:14px; transition:0.2s">⇅</button>
             </div>
             <div class="swap-box">
                 <span style="font-size:10px; color:#555" id="label-to">TO: RABx</span>
-                <input type="number" class="swap-input" id="swap-out" readonly style="color:var(--accent)">
+                <input type="number" class="swap-input" id="swap-out" readonly placeholder="0.0" style="color:var(--accent)">
             </div>
-            <button class="btn btn-outline" onclick="executeSwap()">Execute Conversion</button>
+            <button class="btn btn-outline" style="margin-top:5px" onclick="executeSwap()">Execute Conversion</button>
         </div>
     </div>
-    <div id="debug-console">>> IDLE...</div>
+    <div id="debug-console">>> STBY: Waiting for System Bridge...</div>
 </div>
 
 <script>
-    // --- CANVAS RAGNATELA ---
+    // --- ANIMAZIONE RAGNATELA VETTORIALE ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let pts = [];
     function init() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         pts = [];
-        for(let i=0; i<80; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.5, vy:(Math.random()-0.5)*0.5});
+        for(let i=0; i<90; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.6, vy:(Math.random()-0.5)*0.6});
     }
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillStyle = "rgba(255,255,255,0.6)";
         pts.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy;
             if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, Math.PI*2); ctx.fill();
             for(let j=i+1; j<pts.length; j++) {
                 let d = Math.hypot(p.x-pts[j].x, p.y-pts[j].y);
-                if(d<120) {
-                    ctx.strokeStyle = `rgba(230, 0, 122, ${1 - d/120 - 0.7})`;
-                    ctx.lineWidth = 0.5;
+                if(d<130) {
+                    ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`; // Linee magenta
+                    ctx.lineWidth = 0.8;
                     ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
                 }
             }
@@ -111,7 +122,7 @@
     }
     init(); animate(); window.onresize = init;
 
-    // --- BLOCKCHAIN ---
+    // --- BLOCKCHAIN ENGINE ---
     const HOP_RAW = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
     const SWAP_RAW = "0x73bde75a9b1e0a13b76624a51371f78fe579d478";
     let userAddr, isHopToRab = true;
@@ -120,63 +131,74 @@
     const safe = (a) => ethers.utils.getAddress(a.toLowerCase());
 
     async function forceNetwork() {
-        try { await window.ethereum.request({method:'wallet_addEthereumChain', params:[{chainId:'0x190bc416', chainName:'Paseo Asset Hub', nativeCurrency:{name:'PAS', symbol:'PAS', decimals:18}, rpcUrls:['https://testnet-passet-hub-eth-rpc.polkadot.io']}]}); dbg("NET_SYNC"); } catch(e){ dbg("NET_ERR"); }
+        try { await window.ethereum.request({method:'wallet_addEthereumChain', params:[{chainId:'0x190bc416', chainName:'Paseo Asset Hub', nativeCurrency:{name:'PAS', symbol:'PAS', decimals:18}, rpcUrls:['https://testnet-passet-hub-eth-rpc.polkadot.io']}]}); dbg("NETWORK_LOCKED"); } catch(e){ dbg("NET_ERR"); }
     }
 
     async function forceConnect() {
-        try { const acc = await window.ethereum.request({method:'eth_requestAccounts'}); userAddr = safe(acc[0]); document.getElementById('setup-screen').style.display='none'; document.getElementById('terminal-screen').style.display='grid'; refreshBal(); dbg("BRIDGE_OK"); } catch(e){ dbg("CONN_ERR"); }
+        try { const acc = await window.ethereum.request({method:'eth_requestAccounts'}); userAddr = safe(acc[0]); document.getElementById('setup-screen').style.display='none'; document.getElementById('terminal-screen').style.display='grid'; refreshBal(); dbg("BRIDGE_ESTABLISHED: " + userAddr.substring(0,10)); } catch(e){ dbg("CONN_ERR"); }
     }
 
     // --- CLAIM CYCLE ---
     async function handleClaimCycle() {
-        dbg("SCANNING_COOLDOWN...");
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(safe(HOP_RAW), ["function lastClaim(address) view returns (uint256)"], provider);
-        const last = await contract.lastClaim(userAddr);
-        const next = parseInt(last) + 604800;
-        const now = Math.floor(Date.now()/1000);
+        dbg("INSPECTING_COOLDOWN...");
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const contract = new ethers.Contract(safe(HOP_RAW), ["function lastClaim(address) view returns (uint256)"], provider);
+            const last = await contract.lastClaim(userAddr);
+            const next = parseInt(last) + 604800;
+            const now = Math.floor(Date.now()/1000);
 
-        if(now < next && parseInt(last) !== 0) {
-            document.getElementById('btn-claim-init').style.display = 'none';
-            const display = document.getElementById('countdown-display');
-            display.style.display = 'block';
-            setInterval(() => {
-                const diff = next - Math.floor(Date.now()/1000);
-                const d=Math.floor(diff/86400), h=Math.floor((diff%86400)/3600), m=Math.floor((diff%3600)/60), s=diff%60;
-                display.innerText = `LOCKED: ${d}D ${h}H ${m}M ${s}S`;
-            }, 1000);
-        } else {
-            document.getElementById('btn-claim-init').style.display = 'none';
-            startPoh();
-        }
+            if(now < next && parseInt(last) !== 0) {
+                document.getElementById('btn-claim-init').style.display = 'none';
+                const disp = document.getElementById('countdown-display');
+                disp.style.display = 'block';
+                setInterval(() => {
+                    const diff = next - Math.floor(Date.now()/1000);
+                    if(diff <= 0) location.reload();
+                    const d=Math.floor(diff/86400), h=Math.floor((diff%86400)/3600), m=Math.floor((diff%3600)/60), s=diff%60;
+                    disp.innerText = `LOCKED: ${d}D ${h}H ${m}M ${s}S`;
+                }, 1000);
+                dbg("COOLDOWN_ACTIVE");
+            } else {
+                document.getElementById('btn-claim-init').style.display = 'none';
+                startPoh();
+                dbg("POH_AUTH_REQUIRED");
+            }
+        } catch(e) { dbg("SCAN_ERR"); }
     }
 
     function startPoh() {
         document.getElementById('poh-container').style.display = 'block';
         const icons = ['🐰','💎','🔥','⚡','🌀','🚀','🌑','🛡️'];
-        const seq = icons.sort(()=>0.5-Math.random()).slice(0,4);
+        const seq = [...icons].sort(()=>0.5-Math.random()).slice(0,4);
         document.getElementById('poh-display').innerText = seq.join(' ');
         const grid = document.getElementById('poh-grid'); grid.innerHTML = '';
         let step = 0;
-        icons.sort(()=>0.5-Math.random()).forEach(i => {
+        [...icons].sort(()=>0.5-Math.random()).forEach(i => {
             const c = document.createElement('div'); c.className='poh-cell'; c.innerText=i;
-            c.onclick = () => { if(i===seq[step]){ step++; c.style.opacity='0.2'; if(step===4){ document.getElementById('poh-container').style.display='none'; document.getElementById('btn-final-claim').style.display='block'; }} else { startPoh(); } };
+            c.onclick = () => { if(i===seq[step]){ step++; c.style.opacity='0.2'; if(step===4){ document.getElementById('poh-container').style.display='none'; document.getElementById('btn-final-claim').style.display='block'; dbg("POH_SUCCESS"); }} else { startPoh(); } };
             grid.appendChild(c);
         });
     }
 
     async function executeClaim() {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const contract = new ethers.Contract(safe(HOP_RAW), ["function claimToken() external"], provider.getSigner());
-        const tx = await contract.claimToken(); await tx.wait(); location.reload();
+        dbg("BROADCASTING_CLAIM...");
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const contract = new ethers.Contract(safe(HOP_RAW), ["function claimToken() external"], provider.getSigner());
+            const tx = await contract.claimToken(); await tx.wait(); 
+            dbg("CLAIM_MINED"); location.reload();
+        } catch(e) { dbg("CLAIM_REVERTED"); }
     }
 
-    // --- SWAP ---
+    // --- SWAP ENGINE ---
     async function refreshBal() {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const hop = new ethers.Contract(safe(HOP_RAW), ["function balanceOf(address) view returns (uint256)"], provider);
-        const b = await hop.balanceOf(userAddr);
-        document.getElementById('bal-from').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const hop = new ethers.Contract(safe(HOP_RAW), ["function balanceOf(address) view returns (uint256)"], provider);
+            const b = await hop.balanceOf(userAddr);
+            document.getElementById('bal-from').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
+        } catch(e) { dbg("BAL_ERR"); }
     }
 
     function setMax() { document.getElementById('swap-in').value = document.getElementById('bal-from').innerText; updateEstimate(document.getElementById('swap-in').value); }
@@ -185,26 +207,32 @@
 
     async function executeSwap() {
         const val = document.getElementById('swap-in').value;
-        if(!val) return;
+        if(!val || val <= 0) return;
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
             const amount = ethers.utils.parseEther(val.toString());
             
+            dbg("CHECKING_ALLOWANCE...");
             const hop = new ethers.Contract(safe(HOP_RAW), ["function approve(address s, uint256 a) public returns (bool)", "function allowance(address o, address s) view returns (uint256)"], signer);
             const allow = await hop.allowance(userAddr, safe(SWAP_RAW));
+            
             if(allow.lt(amount)) {
-                dbg("AUTHORIZING...");
-                const txA = await hop.approve(safe(SWAP_RAW), amount, {gasLimit: 100000});
+                dbg("AUTHORIZING_CONTRACT...");
+                const txA = await hop.approve(safe(SWAP_RAW), amount, {gasLimit: 120000});
                 await txA.wait();
+                dbg("AUTH_GRANTED");
             }
             
-            dbg("CONVERTING...");
+            dbg("EXECUTING_SWAP...");
             const swap = new ethers.Contract(safe(SWAP_RAW), ["function swapHOPxforRABx(uint256 a) external"], signer);
             const txS = await swap.swapHOPxforRABx(amount, {gasLimit: 300000});
             await txS.wait();
-            dbg("SUCCESS"); refreshBal();
-        } catch(e){ dbg("ERR: CHECK_LIQUIDITY"); }
+            dbg("SWAP_SUCCESSFUL"); refreshBal();
+        } catch(e){ 
+            console.error(e);
+            dbg("ERR: CHECK_LIQUIDITY"); 
+        }
     }
 </script>
 </body>
