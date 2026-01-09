@@ -3,101 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL HUB // RABBIT-SWAP</title>
+    <title>RABBIT HUB ALPHA 1.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #030303; --fg: #eee; --accent: #e6007a; --border: #222; --gold: #ffcc00; }
-        body { background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; background: #000; border: 1px solid var(--border); padding: 30px; border-radius: 4px; box-shadow: 0 0 50px rgba(230, 0, 122, 0.1); }
+        :root { --bg: #000; --fg: #fff; --red: #ff004c; --gold: #ffcc00; --border: #333; }
+        body { background: var(--bg); color: var(--fg); font-family: 'JetBrains Mono', monospace; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .terminal { width: 100%; max-width: 480px; border: 2px solid var(--border); padding: 20px; background: #050505; }
+        .glitch { font-family: 'Unbounded'; color: var(--red); font-size: 1.5rem; text-transform: uppercase; margin-bottom: 20px; border-bottom: 2px solid var(--red); }
         
-        h1 { font-family: 'Unbounded'; font-size: 1.8rem; text-transform: uppercase; margin-bottom: 5px; color: var(--accent); }
-        .sub { font-size: 0.6rem; color: #444; letter-spacing: 2px; margin-bottom: 30px; }
+        .section { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; background: #080808; }
+        .label { font-size: 0.7rem; color: #666; margin-bottom: 10px; display: block; }
+        
+        .btn { background: var(--fg); color: #000; border: none; padding: 18px; width: 100%; font-family: 'Unbounded'; font-size: 0.8rem; cursor: pointer; text-transform: uppercase; transition: 0.1s; font-weight: bold; }
+        .btn:hover { background: var(--red); color: #fff; }
+        .btn-admin { background: #111; color: var(--gold); border: 1px solid var(--gold); margin-top: 10px; }
+        
+        input { background: #000; border: 1px solid #222; color: #fff; padding: 12px; width: calc(100% - 26px); font-family: 'Unbounded'; font-size: 1rem; outline: none; margin-bottom: 10px; }
+        input:focus { border-color: var(--red); }
 
-        .module { border: 1px solid #111; padding: 20px; margin-bottom: 20px; position: relative; }
-        .module-label { position: absolute; top: -10px; left: 10px; background: #000; padding: 0 10px; font-size: 0.6rem; color: var(--accent); font-weight: bold; }
-
-        .btn { background: var(--fg); color: #000; border: none; padding: 15px; width: 100%; font-family: 'Unbounded'; font-size: 0.7rem; font-weight: 700; cursor: pointer; text-transform: uppercase; margin: 5px 0; transition: 0.2s; }
-        .btn:hover { background: var(--accent); color: #fff; }
-        .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn-admin-trigger { background: #111; color: var(--gold); border: 1px solid var(--gold); margin-top: 20px; font-size: 0.6rem; opacity: 0.5; }
-        .btn-admin-trigger:hover { opacity: 1; background: var(--gold); color: #000; }
-
-        .admin-box { display: none; margin-top: 15px; padding: 15px; border: 1px dashed var(--gold); background: rgba(255, 204, 0, 0.05); }
+        .admin-panel { display: none; border: 2px dashed var(--gold); padding: 15px; margin-top: 20px; }
+        #status-log { background: #000; border: 1px solid #111; padding: 10px; font-size: 0.65rem; color: #00ff41; height: 60px; overflow-y: auto; margin-top: 15px; border-left: 3px solid #00ff41; }
         
-        .input-group { background: #080808; border: 1px solid #151515; padding: 12px; margin: 10px 0; }
-        label { font-size: 0.55rem; color: #555; display: block; margin-bottom: 5px; }
-        input { background: transparent; border: none; color: #fff; font-family: 'Unbounded'; font-size: 1rem; width: 100%; outline: none; }
-        
-        .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-        .poh-cell { border: 1px solid #222; padding: 10px; text-align: center; cursor: pointer; font-size: 1.2rem; }
-        
-        #status { font-size: 0.6rem; color: #555; text-align: center; margin-top: 20px; border-top: 1px solid #111; padding-top: 10px; }
-        .bal { color: var(--accent); cursor: pointer; text-decoration: underline; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .cell { border: 1px solid #333; padding: 15px; text-align: center; cursor: pointer; font-size: 1.2rem; background: #000; }
+        .cell:hover { border-color: var(--red); }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>RABBIT_HUB</h1>
-    <div class="sub">PASEO_ASSET_HUB // VERSION_0.0.9</div>
-
-    <div id="auth-box">
-        <button class="btn" onclick="connect()">INITIALIZE TERMINAL</button>
+<div class="terminal">
+    <div class="glitch">RABBIT_HUB_V1</div>
+    
+    <div id="connect-layer">
+        <button class="btn" onclick="connect()">[ INITIALIZE_CONNECTION ]</button>
     </div>
 
-    <div id="ui-box" style="display:none;">
-        
-        <div class="module">
-            <div class="module-label">MODULE_01: HOPx_EXTRACTION</div>
-            <div id="cooldown-timer" style="color:#ff3e3e; font-size:0.7rem; margin-bottom:10px; display:none;"></div>
+    <div id="app-layer" style="display:none;">
+        <div class="section">
+            <span class="label">01 // RESOURCE_EXTRACTION</span>
+            <div id="timer" style="color:var(--red); font-size:0.8rem; margin-bottom:10px; display:none;">COOLDOWN_ACTIVE</div>
             
-            <button class="btn btn-outline" id="btn-poh" onclick="startPoh()">START HUMAN VERIFICATION</button>
+            <button class="btn" id="btn-poh" onclick="startPoh()">VERIFY_HUMANITY</button>
             
-            <div id="poh-ui" style="display:none; text-align:center;">
-                <div id="poh-target" style="padding:10px; border:1px solid #333; margin-bottom:10px; color:var(--accent);">----</div>
-                <div class="poh-grid" id="poh-grid"></div>
+            <div id="poh-box" style="display:none;">
+                <div id="poh-target" style="text-align:center; padding:10px; color:var(--red); border:1px solid #222; margin-bottom:10px;">----</div>
+                <div class="grid" id="poh-grid"></div>
             </div>
 
-            <button class="btn" id="btn-claim" style="display:none;" onclick="claim()">EXECUTE CLAIM (1.00 HOPx)</button>
+            <button class="btn" id="btn-claim" style="display:none;" onclick="runClaim()">CLAIM_HOPx_NOW</button>
         </div>
 
-        <div class="module">
-            <div class="module-label">MODULE_02: RABx_EXCHANGE</div>
-            <div class="input-group">
-                <label>SEND (HOPx) <span style="float:right">BAL: <span class="bal" id="bal-hop" onclick="setMax()">0.00</span></span></label>
-                <input type="number" id="swap-in" placeholder="0.0" oninput="calcSwap(this.value)">
-            </div>
-            <div style="text-align:center; color:#222; font-size:0.6rem;">[ RATIO 1:200 ]</div>
-            <div class="input-group">
-                <label>RECEIVE (RABx)</label>
-                <input type="number" id="swap-out" placeholder="0.0" readonly>
-            </div>
-            <button class="btn btn-outline" id="btn-approve" onclick="approve()">STEP 1: AUTHORIZE</button>
-            <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">STEP 2: CONVERT NOW</button>
-        </div>
-
-        <button class="btn btn-admin-trigger" id="btn-admin-access" onclick="toggleAdmin()">ADMIN ACCESS (REQUISITE: OWNER WALLET)</button>
-
-        <div id="admin-panel" class="admin-box">
-            <span style="color:var(--gold); font-size:0.6rem; font-weight:bold;">ROOT_ACCESS_GRANTED</span>
+        <div class="section">
+            <span class="label">02 // ASSET_CONVERSION (1:200)</span>
+            <label>INPUT_HOPx (BAL: <span id="bal-val" style="color:var(--red); cursor:pointer;" onclick="setMax()">0.0</span>)</label>
+            <input type="number" id="swap-in" placeholder="0.0" oninput="document.getElementById('swap-out').value = this.value * 200">
             
-            <div style="margin-top:15px;">
-                <label style="color:var(--gold);">MINT HOPx (OWNER)</label>
-                <input type="number" id="adm-hop-mint" placeholder="Amount..." style="border-bottom:1px solid #333;">
-                <button class="btn btn-outline" style="color:var(--gold); font-size:0.6rem;" onclick="adminMintHOP()">EXECUTE HOPx MINT</button>
-            </div>
-
-            <div style="margin-top:15px;">
-                <label style="color:var(--gold);">MINT RABx LIQUIDITY</label>
-                <input type="number" id="adm-rab-mint" placeholder="Amount..." style="border-bottom:1px solid #333;">
-                <button class="btn btn-outline" style="color:var(--gold); font-size:0.6rem;" onclick="adminMintRAB()">EXECUTE RABx MINT</button>
-            </div>
+            <label>OUTPUT_RABx</label>
+            <input type="number" id="swap-out" placeholder="0.0" readonly>
+            
+            <button class="btn" id="btn-appr" onclick="runApprove()">1. AUTHORIZE</button>
+            <button class="btn" id="btn-swap" style="display:none;" onclick="runSwap()">2. CONVERT</button>
         </div>
 
+        <button class="btn btn-admin" onclick="toggleAdmin()">[ ADMIN_CONSOLE ]</button>
+
+        <div id="admin-panel" class="admin-panel">
+            <span class="label" style="color:var(--gold);">ROOT@SYSTEM_MANAGER</span>
+            <input type="number" id="mint-hop-amt" placeholder="HOPx amount">
+            <button class="btn btn-admin" onclick="adminMint('HOP')">MINT_HOPx</button>
+            <br><br>
+            <input type="number" id="mint-rab-amt" placeholder="RABx amount">
+            <button class="btn btn-admin" onclick="adminMint('RAB')">MINT_RABx_LIQUIDITY</button>
+        </div>
     </div>
 
-    <div id="status">SYSTEM_STANDBY...</div>
+    <div id="status-log">>> SYSTEM_READY... AWAITING_INPUT</div>
 </div>
 
 <script>
@@ -106,84 +87,68 @@
     const OWNER = "0xa036B32c86E2aB7F2AdE9ACC15984B2A2DDe8977";
     const ICONS = ['⚡', '🛡️', '📡', '💎', '🚀', '🔑', '🌿', '🔥'];
 
-    let provider, signer, hopContract, swapContract, user, seq=[], step=0;
+    let provider, signer, hopCtx, swapCtx, user, seq=[], step=0;
 
     async function connect() {
-        if(!window.ethereum) return log("ERR_NO_WALLET");
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        user = await signer.getAddress();
-
-        // ABI DEFINITION
-        const HOP_ABI = [
-            "function claimToken() external",
-            "function lastClaim(address) view returns (uint256)",
-            "function balanceOf(address) view returns (uint256)",
-            "function approve(address,uint256) returns (bool)",
-            "function mint(address,uint256) external"
-        ];
-        const SWAP_ABI = [
-            "function swapHOPxforRABx(uint256) external",
-            "function mintRABx(uint256) external"
-        ];
-
-        hopContract = new ethers.Contract(HOP_ADDR, HOP_ABI, signer);
-        swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, signer);
-
-        document.getElementById('auth-box').style.display = 'none';
-        document.getElementById('ui-box').style.display = 'block';
-
-        updateUI();
-        log("LINK_ESTABLISHED: " + user.substring(0,8));
-    }
-
-    async function updateUI() {
+        if(!window.ethereum) return log("ERROR: NO_METAMASK");
         try {
-            const b = await hopContract.balanceOf(user);
-            document.getElementById('bal-hop').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            user = await signer.getAddress();
+
+            hopCtx = new ethers.Contract(HOP_ADDR, [
+                "function claimToken() external",
+                "function claim() external", // Alternativa se il nome è claim
+                "function lastClaim(address) view returns (uint256)",
+                "function balanceOf(address) view returns (uint256)",
+                "function approve(address,uint256) returns (bool)",
+                "function mint(address,uint256) external"
+            ], signer);
+
+            swapCtx = new ethers.Contract(SWAP_ADDR, [
+                "function swapHOPxforRABx(uint256) external",
+                "function mintRABx(uint256) external"
+            ], signer);
+
+            document.getElementById('connect-layer').style.display = 'none';
+            document.getElementById('app-layer').style.display = 'block';
             
-            const last = await hopContract.lastClaim(user);
-            const next = parseInt(last) + 604800;
-            const now = Math.floor(Date.now()/1000);
-            if(now < next && parseInt(last) !== 0) {
-                document.getElementById('btn-poh').style.display = 'none';
-                const timer = document.getElementById('cooldown-timer');
-                timer.style.display = 'block';
-                const upd = () => {
-                    const diff = next - Math.floor(Date.now()/1000);
-                    if(diff <= 0) return location.reload();
-                    timer.innerText = `NEXT EXTRACTION: ${Math.floor(diff/3600)}H ${Math.floor((diff%3600)/60)}M`;
-                };
-                upd(); setInterval(upd, 60000);
-            }
-        } catch(e) { console.error(e); }
+            refreshData();
+            log("CONNECTED: " + user.substring(0,12));
+        } catch(e) { log("CONN_FAIL: " + e.message); }
     }
 
-    function toggleAdmin() {
-        if(user.toLowerCase() !== OWNER.toLowerCase()) return log("ACCESS_DENIED: OWNER_REQUIRED");
-        const panel = document.getElementById('admin-panel');
-        panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
-        log("ADMIN_PANEL_TOGGLED");
+    async function refreshData() {
+        const b = await hopCtx.balanceOf(user);
+        document.getElementById('bal-val').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
+        
+        const last = await hopCtx.lastClaim(user);
+        const next = parseInt(last) + 604800;
+        if(Math.floor(Date.now()/1000) < next && parseInt(last) !== 0) {
+            document.getElementById('btn-poh').style.display = 'none';
+            document.getElementById('timer').style.display = 'block';
+            document.getElementById('timer').innerText = "COOLDOWN: IN_PROGRESS";
+        }
     }
 
-    // --- POH & CLAIM LOGIC ---
+    // --- CLAIM LOGIC ---
     function startPoh() {
         document.getElementById('btn-poh').style.display = 'none';
-        document.getElementById('poh-ui').style.display = 'block';
+        document.getElementById('poh-box').style.display = 'block';
         seq = [...ICONS].sort(() => 0.5 - Math.random()).slice(0, 4);
         document.getElementById('poh-target').innerText = seq.join('');
         const grid = document.getElementById('poh-grid');
         grid.innerHTML = '';
-        [...ICONS].sort(() => 0.5 - Math.random()).forEach(icon => {
-            const c = document.createElement('div'); c.className = 'poh-cell'; c.innerText = icon;
+        [...ICONS].sort(() => 0.5 - Math.random()).forEach(i => {
+            const c = document.createElement('div'); c.className='cell'; c.innerText=i;
             c.onclick = () => {
-                if(icon === seq[step]) {
-                    step++; c.style.opacity = '0.1';
+                if(i === seq[step]) {
+                    step++; c.style.opacity='0.2';
                     if(step === 4) {
-                        document.getElementById('poh-ui').style.display = 'none';
-                        document.getElementById('btn-claim').style.display = 'block';
-                        log("HUMANITY_VERIFIED");
+                        document.getElementById('poh-box').style.display='none';
+                        document.getElementById('btn-claim').style.display='block';
+                        log("HUMAN_VERIFIED");
                     }
                 } else { step=0; startPoh(); }
             };
@@ -191,66 +156,78 @@
         });
     }
 
-    async function claim() {
+    async function runClaim() {
+        log("EXECUTING_CLAIM...");
         try {
-            log("BROADCASTING_EXTRACTION...");
-            const tx = await hopContract.claimToken({ gasLimit: 800000 });
+            // Prova claimToken, se fallisce prova claim
+            let tx;
+            try {
+                tx = await hopCtx.claimToken({ gasLimit: 500000 });
+            } catch(e) {
+                tx = await hopCtx.claim({ gasLimit: 500000 });
+            }
             await tx.wait();
-            log("EXTRACTION_SUCCESS");
-            setTimeout(() => location.reload(), 2000);
-        } catch(e) { log("EXTRACTION_FAILED: GAS_OR_COOLDOWN"); }
+            log("CLAIM_SUCCESSFUL");
+            location.reload();
+        } catch(e) { log("CLAIM_ERR: CHECK_ABI_OR_GAS"); }
     }
 
     // --- SWAP LOGIC ---
-    function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
-    
-    async function approve() {
+    async function runApprove() {
         try {
             const v = document.getElementById('swap-in').value;
-            log("AUTHORIZING_FUNDS...");
-            const tx = await hopContract.approve(SWAP_ADDR, ethers.utils.parseEther(v));
+            log("APPROVING_HOPx...");
+            const tx = await hopCtx.approve(SWAP_ADDR, ethers.utils.parseEther(v));
             await tx.wait();
-            document.getElementById('btn-approve').style.display = 'none';
+            document.getElementById('btn-appr').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            log("AUTHORIZATION_SUCCESS");
-        } catch(e) { log("AUTHORIZATION_REJECTED"); }
+            log("APPROVE_SUCCESS");
+        } catch(e) { log("APPROVE_FAIL"); }
     }
 
-    async function swap() {
+    async function runSwap() {
         try {
             const v = document.getElementById('swap-in').value;
-            log("EXECUTING_CONVERSION...");
-            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(v), { gasLimit: 500000 });
+            log("SWAPPING...");
+            const tx = await swapCtx.swapHOPxforRABx(ethers.utils.parseEther(v), { gasLimit: 500000 });
             await tx.wait();
-            log("CONVERSION_SUCCESS");
+            log("SWAP_SUCCESS");
             setTimeout(() => location.reload(), 2000);
-        } catch(e) { log("CONVERSION_FAILED"); }
+        } catch(e) { log("SWAP_FAIL"); }
     }
 
-    // --- ADMIN EXECUTION ---
-    async function adminMintHOP() {
-        const amt = document.getElementById('adm-hop-mint').value;
-        log("MINTING_HOPx...");
-        const tx = await hopContract.mint(user, ethers.utils.parseEther(amt));
-        await tx.wait();
-        log("HOPx_MINT_SUCCESS");
+    // --- ADMIN ---
+    function toggleAdmin() {
+        if(user.toLowerCase() !== OWNER.toLowerCase()) return log("ACCESS_DENIED");
+        const p = document.getElementById('admin-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
     }
 
-    async function adminMintRAB() {
-        const amt = document.getElementById('adm-rab-mint').value;
-        log("MINTING_LIQUIDITY...");
-        const tx = await swapContract.mintRABx(ethers.utils.parseEther(amt));
-        await tx.wait();
-        log("RABx_MINT_SUCCESS");
+    async function adminMint(type) {
+        try {
+            log("ADMIN_MINT_STARTING...");
+            if(type === 'HOP') {
+                const a = document.getElementById('mint-hop-amt').value;
+                await (await hopCtx.mint(user, ethers.utils.parseEther(a))).wait();
+            } else {
+                const a = document.getElementById('mint-rab-amt').value;
+                await (await swapCtx.mintRABx(ethers.utils.parseEther(a))).wait();
+            }
+            log("MINT_COMPLETED");
+        } catch(e) { log("MINT_ERR"); }
     }
 
     function setMax() {
-        const b = document.getElementById('bal-hop').innerText;
+        const b = document.getElementById('bal-val').innerText;
         document.getElementById('swap-in').value = b;
-        calcSwap(b);
+        document.getElementById('swap-out').value = b * 200;
     }
 
-    function log(m) { document.getElementById('status').innerText = ">> " + m; }
+    function log(m) {
+        const l = document.getElementById('status-log');
+        l.innerText = ">> " + m;
+        console.log(m);
+    }
 </script>
 </body>
 </html>
