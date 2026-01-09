@@ -18,19 +18,21 @@
         .version { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: var(--accent); background: rgba(230, 0, 122, 0.1); padding: 2px 6px; border-radius: 4px; }
         
         .swap-box { background: #000; border: 1px solid var(--border); padding: 20px; border-radius: 8px; margin-bottom: 15px; }
-        .input-group { margin-bottom: 15px; text-align: left; }
-        label { font-size: 0.65rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+        .input-group { margin-bottom: 15px; text-align: left; position: relative; }
+        label { font-size: 0.65rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .balance-tag { color: var(--accent); font-family: 'JetBrains Mono'; cursor: pointer; }
+        
         input { background: transparent; border: none; color: white; font-family: 'Unbounded'; font-size: 1.2rem; width: 100%; outline: none; padding: 10px 0; border-bottom: 1px solid #111; }
         input:focus { border-color: var(--accent); }
         
-        .rate-info { font-size: 0.7rem; color: #444; margin: 10px 0; font-family: 'JetBrains Mono'; }
+        .rate-info { font-size: 0.7rem; color: #444; margin: 10px 0; font-family: 'JetBrains Mono'; text-align: center; }
 
         .btn { font-family: 'Unbounded', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; border-radius: 6px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
         .btn:hover { background: var(--accent); color: white; transform: translateY(-2px); }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
         .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-        #status { margin-top: 20px; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #555; text-transform: uppercase; text-align: center; }
+        #status { margin-top: 20px; font-family: 'JetBrains Mono'; font-size: 0.6rem; color: #555; text-transform: uppercase; text-align: center; height: 15px; }
         
         .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: #333; }
         .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'JetBrains Mono'; font-size: 10px; color: var(--accent); }
@@ -45,7 +47,7 @@
 <div class="container">
     <div class="header">
         <h1>RabbitSwap <span class="version">v0.0.1-a</span></h1>
-        <div style="font-size: 0.7rem; color: #555; margin-top: 5px;">Fixed Rate Protocol: 1 HOP = 200 RAB</div>
+        <div style="font-size: 0.7rem; color: #555; margin-top: 5px;">Fixed Rate: 1 HOP = 200 RAB</div>
     </div>
 
     <div id="panel-connect">
@@ -56,12 +58,15 @@
     <div id="panel-swap" style="display: none;">
         <div class="swap-box">
             <div class="input-group">
-                <label>You Send (HOP)</label>
+                <label>
+                    Send (HOP) 
+                    <span class="balance-tag" onclick="setMax()">BAL: <span id="val-hop-bal">0.00</span></span>
+                </label>
                 <input type="number" id="input-hop" placeholder="0.0" oninput="calculateSwap(this.value)">
             </div>
             <div class="rate-info">↓ 1:200 FIXED RATE</div>
             <div class="input-group">
-                <label>You Receive (RAB)</label>
+                <label>Receive (RAB)</label>
                 <input type="number" id="output-rab" placeholder="0.0" readonly>
             </div>
         </div>
@@ -75,7 +80,7 @@
 </div>
 
 <script>
-    // BG ANIMATION
+    // BG Dots
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let dots = [];
@@ -86,109 +91,121 @@
         }
     }
     function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "#333";
-        dots.forEach(d => {
-            d.x += d.vx; d.y += d.vy;
-            if(d.x<0||d.x>canvas.width) d.vx*=-1; if(d.y<0||d.y>canvas.height) d.vy*=-1;
-            ctx.beginPath(); ctx.arc(d.x,d.y,d.size,0,Math.PI*2); ctx.fill();
-        });
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "#333";
+        dots.forEach(d => { d.x += d.vx; d.y += d.vy; if(d.x<0||d.x>canvas.width) d.vx*=-1; if(d.y<0||d.y>canvas.height) d.vy*=-1; ctx.beginPath(); ctx.arc(d.x,d.y,d.size,0,Math.PI*2); ctx.fill(); });
         requestAnimationFrame(animate);
     }
     init(); animate();
 
-    // DEX LOGIC
+    // CHAIN CONSTANTS
     const HOP_ADDR = "0x2edD59d82e3F701d4f9644aB241eFAF53B21FbfE";
     const SWAP_ADDR = "0x8db092bE8A4baf621BeC94957aEba1e26d607a1a"; 
     
     const ERC20_ABI = [
         "function approve(address spender, uint256 amount) returns (bool)",
-        "function allowance(address owner, address spender) view returns (uint256)",
-        "function balanceOf(address) view returns (uint256)"
+        "function balanceOf(address) view returns (uint256)",
+        "function allowance(address, address) view returns (uint256)"
     ];
     const SWAP_ABI = [
-        "function swapHOPforRAB(uint256 amount) external",
-        "function balanceOf(address) view returns (uint256)"
+        "function swapHOPforRAB(uint256 amount) external"
     ];
 
-    let provider, signer, hopContract, swapContract;
+    let provider, signer, hopContract, swapContract, userAccount;
+    let rawBalance = "0";
 
     async function connect() {
         if (!window.ethereum) return updateStatus("MetaMask Missing");
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = provider.getSigner();
-        
-        hopContract = new ethers.Contract(HOP_ADDR, ERC20_ABI, signer);
-        swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, signer);
+        try {
+            provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            signer = provider.getSigner();
+            userAccount = await signer.getAddress();
+            
+            hopContract = new ethers.Contract(HOP_ADDR, ERC20_ABI, signer);
+            swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, signer);
 
-        document.getElementById('panel-connect').style.display = 'none';
-        document.getElementById('panel-swap').style.display = 'block';
-        updateStatus("Wallet Linked");
+            await updateBalance();
+            
+            document.getElementById('panel-connect').style.display = 'none';
+            document.getElementById('panel-swap').style.display = 'block';
+            updateStatus("Wallet: " + userAccount.substring(0,6) + "...");
+        } catch (e) { updateStatus("Connection Error"); }
+    }
+
+    async function updateBalance() {
+        const bal = await hopContract.balanceOf(userAccount);
+        rawBalance = bal;
+        const formatted = ethers.utils.formatEther(bal);
+        document.getElementById('val-hop-bal').innerText = parseFloat(formatted).toFixed(2);
+    }
+
+    function setMax() {
+        const formatted = ethers.utils.formatEther(rawBalance);
+        document.getElementById('input-hop').value = formatted;
+        calculateSwap(formatted);
     }
 
     function calculateSwap(val) {
-        if(!val) return document.getElementById('output-rab').value = "";
-        document.getElementById('output-rab').value = (val * 200).toFixed(2);
+        if(!val || val < 0) {
+            document.getElementById('output-rab').value = "";
+            return;
+        }
+        document.getElementById('output-rab').value = (val * 200).toLocaleString();
+        
+        // Dynamic Check
+        const inputWei = ethers.utils.parseEther(val.toString());
+        if (inputWei.gt(rawBalance)) {
+            updateStatus("Insufficient HOP Balance");
+        } else {
+            updateStatus("Rate Verified");
+        }
     }
 
     async function approveHOP() {
         try {
-            updateStatus("Approving HOP...");
-            const amount = ethers.utils.parseEther(document.getElementById('input-hop').value);
+            const val = document.getElementById('input-hop').value;
+            if(!val) return updateStatus("Enter Amount");
+            updateStatus("Waiting for Approval...");
+            const amount = ethers.utils.parseEther(val);
             const tx = await hopContract.approve(SWAP_ADDR, amount);
-            updateStatus("Pending Confirmation...");
             await tx.wait();
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            updateStatus("Approval Confirmed");
-        } catch (e) { 
-            console.error(e);
-            updateStatus("Approval Failed"); 
-        }
+            updateStatus("Approval Successful");
+        } catch (e) { updateStatus("Approval Rejected"); }
     }
 
     async function swap() {
         try {
-            updateStatus("Executing Swap...");
+            updateStatus("Swapping...");
             const amount = ethers.utils.parseEther(document.getElementById('input-hop').value);
-            // Utilizziamo un gasLimit generoso per Paseo
             const tx = await swapContract.swapHOPforRAB(amount, { gasLimit: 500000 });
-            updateStatus("Mining Transaction...");
             await tx.wait();
-            updateStatus("Swap Success! 🎉");
-            // Reset per un nuovo swap
-            document.getElementById('btn-approve').style.display = 'block';
-            document.getElementById('btn-swap').style.display = 'none';
-        } catch (e) { 
-            console.error(e);
-            updateStatus("Swap Error - Check Balance"); 
-        }
+            updateStatus("Success! RAB Received");
+            await updateBalance();
+            setTimeout(() => location.reload(), 3000);
+        } catch (e) { updateStatus("Swap Failed"); }
     }
 
     async function addRABToken() {
-        try {
-            await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
-                type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RAB', decimals: 18 } 
-            }});
-        } catch (e) { console.error(e); }
+        await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
+            type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RAB', decimals: 18 } 
+        }});
     }
 
     function updateStatus(msg) { document.getElementById('status').innerText = msg; }
     
     async function addNetwork() {
-        try {
-            await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                    chainId: '0x190bc416', // 420420438 in hex
-                    chainName: 'Paseo Asset Hub',
-                    nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
-                    blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
-                }]
-            });
-        } catch (e) { console.error(e); }
+        await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+                chainId: '0x190bc416',
+                chainName: 'Paseo Asset Hub',
+                nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
+                rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
+                blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
+            }]
+        });
     }
 </script>
 </body>
