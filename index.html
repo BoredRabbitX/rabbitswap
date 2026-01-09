@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.4.0</title>
+    <title>Rabbit Swap X | Alpha 1.4.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ESTABLISHED // ALPHA 1.4.0</div>
+<div class="f-left">ESTABLISHED // ALPHA 1.4.1</div>
 <div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
 <div class="container">
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-    // --- ANIMAZIONE RAGNATELA ---
+    // --- ANIMAZIONE ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let pts = [];
@@ -105,7 +105,7 @@
     }
     init(); animate(); window.onresize = init;
 
-    // --- LOGICA CORE ---
+    // --- CONFIGURAZIONE ---
     const HOP_ADDR = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
     const RAB_ADDR = "0xb28c695683eb22a06dd2d1e70bda8e915eb0bc12";
     const SWAP_ADDR = "0xae2b93bccdebf437ad00fd19ca46060ba145deb2";
@@ -113,13 +113,9 @@
     let userAddr = "";
     let isHopToRab = true;
 
-    const dbg = (m) => { 
-        const c = document.getElementById('debug-console'); 
-        if(c) { c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; }
-    };
+    const dbg = (m) => { const c = document.getElementById('debug-console'); if(c) { c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; } };
 
     async function forceNetwork() {
-        if(!window.ethereum) return alert("Installa MetaMask");
         try {
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
@@ -135,7 +131,6 @@
     }
 
     async function forceConnect() {
-        if(!window.ethereum) return alert("Installa MetaMask");
         try {
             const acc = await window.ethereum.request({ method: 'eth_requestAccounts' });
             userAddr = acc[0];
@@ -146,7 +141,7 @@
         } catch (e) { dbg("CONN_ERR"); }
     }
 
-    // --- MODULE 01: CLAIM ---
+    // --- MODULE 01: CLAIM (LOGICA ORIGINALE RIPRISTINATA) ---
     async function handleClaimCycle() {
         dbg("INSPECTING_COOLDOWN...");
         try {
@@ -197,13 +192,21 @@
     }
 
     async function executeClaim() {
+        dbg("BROADCASTING_EXTRACTION...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], provider.getSigner());
-            const tx = await contract.claimToken(); 
+            const signer = provider.getSigner();
+            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], signer);
+            // Forza gasLimit per evitare stime errate
+            const tx = await contract.claimToken({ gasLimit: 250000 }); 
+            dbg("TX_PENDING...");
             await tx.wait();
+            dbg("EXTRACTION_SUCCESS");
             location.reload();
-        } catch (e) { dbg("CLAIM_ERR"); }
+        } catch (e) { 
+            console.error(e);
+            dbg("CLAIM_ERR: REJECTED_BY_NETWORK"); 
+        }
     }
 
     // --- MODULE 02: SWAP ---
@@ -245,18 +248,27 @@
             const allow = await token.allowance(userAddr, SWAP_ADDR);
 
             if (allow.lt(amount)) {
-                dbg("AUTHORIZING...");
+                dbg("AUTHORIZING_VAULT...");
                 const txA = await token.approve(SWAP_ADDR, ethers.constants.MaxUint256);
                 await txA.wait();
+                dbg("VAULT_AUTHORIZED");
             }
 
-            dbg("EXECUTING_SWAP...");
+            dbg("EXECUTING_CONVERSION...");
             const swap = new ethers.Contract(SWAP_ADDR, ["function swapIn(uint256 a) external", "function swapOut(uint256 a) external"], signer);
-            const txS = isHopToRab ? await swap.swapIn(amount, { gasLimit: 500000 }) : await swap.swapOut(amount, { gasLimit: 500000 });
+            // Forza parametri di rete per Asset Hub
+            const txS = isHopToRab ? 
+                await swap.swapIn(amount, { gasLimit: 500000 }) : 
+                await swap.swapOut(amount, { gasLimit: 500000 });
+            
+            dbg("WAITING_CONFIRMATION...");
             await txS.wait();
-            dbg("SUCCESS"); 
+            dbg("CONVERSION_SUCCESS"); 
             refreshBal();
-        } catch (e) { dbg("ERR: CHECK_LIQUIDITY"); }
+        } catch (e) { 
+            console.error(e);
+            dbg("ERR: CHECK_LIQUIDITY_OR_GAS"); 
+        }
     }
 </script>
 </body>
