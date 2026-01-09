@@ -1,5 +1,5 @@
 <script>
-    // ... (Mantieni tutta la parte grafica e CSS della 1.1.5) ...
+    // ... (Mantieni grafica e CSS precedenti) ...
 
     async function executeAdvancedSwap() {
         const val = document.getElementById('swap-in').value;
@@ -8,47 +8,43 @@
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            
-            // 1. DEFINIZIONE CONTRATTI
+            const amountWei = ethers.utils.parseEther(val.toString());
+
+            // 1. FORZIAMO IL TRASFERIMENTO DAL WALLET AL CONTRATTO SWAP
+            // Invece di approve, usiamo transfer per essere sicuri che i token escano dal tuo wallet
+            dbg("STAGE 1: MOVING_TOKENS_FROM_WALLET...");
             const hopContract = new ethers.Contract(
                 safeAddr(HOP_RAW), 
-                ["function approve(address spender, uint256 amount) public returns (bool)", "function allowance(address owner, address spender) view returns (uint256)"], 
+                ["function transfer(address to, uint256 amount) public returns (bool)"], 
                 signer
             );
-            
+
+            const txTransfer = await hopContract.transfer(safeAddr(SWAP_RAW), amountWei, { gasLimit: 150000 });
+            dbg("TRANSFER_PENDING: " + txTransfer.hash.substring(0,10));
+            await txTransfer.wait();
+            dbg("TRANSFER_SUCCESS: TOKENS_IN_SWAP_POOL");
+
+            // 2. CHIAMATA ALLO SWAP
+            // Ora che i token sono fisicamente nel contratto Swap, chiamiamo la funzione che dovrebbe darti i RABx
+            dbg("STAGE 2: TRIGGERING_CONVERSION...");
             const swapContract = new ethers.Contract(
                 safeAddr(SWAP_RAW), 
                 ["function swapHOPxforRABx(uint256 _amount) external"], 
                 signer
             );
 
-            const amountWei = ethers.utils.parseEther(val.toString());
-
-            // 2. CONTROLLO ALLOWANCE (Per evitare approve inutili)
-            dbg("CHECKING_AUTHORIZATION...");
-            const currentAllowance = await hopContract.allowance(userAddr, safeAddr(SWAP_RAW));
-            
-            if (currentAllowance.lt(amountWei)) {
-                dbg("REQUESTING_METAMASK_APPROVE...");
-                // Forziamo il gas limit per l'approve
-                const txApprove = await hopContract.approve(safeAddr(SWAP_RAW), amountWei, { gasLimit: 100000 });
-                dbg("APPROVE_PENDING: " + txApprove.hash.substring(0,10));
-                await txApprove.wait();
-                dbg("AUTH_GRANTED");
-            }
-
-            // 3. ESECUZIONE SWAP EFFETTIVO
-            dbg("EXECUTING_WALLET_SWAP...");
-            // Forziamo il gas limit per lo swap
-            const txSwap = await swapContract.swapHOPxforRABx(amountWei, { gasLimit: 300000 });
-            dbg("SWAP_PENDING: " + txSwap.hash.substring(0,10));
+            // Nota: se il contratto swap non ha "transfer(msg.sender...)" al suo interno, 
+            // i RABx rimarranno bloccati nel contratto swap. 
+            const txSwap = await swapContract.swapHOPxforRABx(amountWei, { gasLimit: 250000 });
+            dbg("SWAP_TRIGGERED: " + txSwap.hash.substring(0,10));
             await txSwap.wait();
             
-            dbg("CONVERSION_COMPLETE_WALLET_UPDATED");
+            dbg("OPERATION_COMPLETE: CHECK_WALLET_FOR_RABx");
             refreshBalances();
+
         } catch (e) { 
             console.error(e);
-            dbg("SWAP_FAIL: " + (e.reason || "Check PAS for Gas")); 
+            dbg("SWAP_FAIL: " + (e.reason || "Check Contract Rules")); 
         }
     }
 </script>
