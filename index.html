@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X // Terminal v1.5</title>
+    <title>Rabbit Swap X // Terminal v1.6</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
@@ -13,16 +13,23 @@
         .main-wrapper { max-width: 1000px; margin: 0 auto; }
         .header-main { text-align: center; margin-bottom: 40px; border-bottom: 1px solid var(--accent); padding-bottom: 20px; }
         h1 { font-family: 'Unbounded'; font-size: 2.2rem; margin: 0; text-transform: uppercase; }
+        
+        /* Login Buttons Area */
+        .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px; margin: 30px auto; }
+        @media (max-width: 600px) { .auth-grid { grid-template-columns: 1fr; } }
+
         .dual-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         @media (max-width: 800px) { .dual-container { grid-template-columns: 1fr; } }
+        
         .module { background: rgba(8, 8, 8, 0.9); border: 1px solid var(--border); padding: 25px; border-radius: 4px; border-top: 4px solid var(--accent); }
         .module-header { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 8px; font-weight: 700; display: block; }
-        .btn { font-family: 'Unbounded'; background: var(--fg); color: #000; border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; margin-top: 10px; }
-        .btn:hover { background: var(--accent); color: white; }
+        
+        .btn { font-family: 'Unbounded'; background: var(--fg); color: #000; border: none; padding: 18px; font-size: 0.75rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.2s; }
+        .btn:hover { background: var(--accent); color: white; transform: translateY(-2px); }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn-network { background: var(--gold); color: #000; display: none; }
+        .btn-setup { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+        
         #status-log { font-size: 0.7rem; color: #00ff41; text-align: center; margin-top: 30px; border-top: 1px solid #111; padding-top: 20px; }
-        .input-group { margin-top: 15px; }
         input { background: #000; border: 1px solid #222; color: #fff; padding: 12px; width: calc(100% - 26px); font-family: 'JetBrains Mono'; outline: none; }
         #admin-panel { display: none; border: 1px dashed var(--gold); padding: 25px; margin-top: 40px; grid-template-columns: 1fr 1fr; gap: 20px; background: rgba(255, 204, 0, 0.05); }
     </style>
@@ -34,11 +41,11 @@
 <div class="main-wrapper">
     <div class="header-main">
         <h1>Rabbit Swap X</h1>
-        <div style="font-size: 0.7rem; color: var(--accent); letter-spacing: 3px;">PASEO_ASSET_HUB // v1.5_FIXED</div>
+        <div style="font-size: 0.7rem; color: var(--accent); letter-spacing: 3px;">PASEO_ASSET_HUB // v1.6</div>
         
-        <div id="setup-layer" style="margin-top: 20px;">
-            <button id="btn-connect" class="btn" style="max-width: 300px;" onclick="initConnection()">CONNECT WALLET</button>
-            <button id="btn-switch" class="btn btn-network" style="max-width: 300px;" onclick="switchNetwork()">SWITCH TO PASEO ASSET HUB</button>
+        <div id="setup-layer" class="auth-grid">
+            <button id="btn-connect" class="btn" onclick="initConnection()">Link Wallet</button>
+            <button id="btn-switch" class="btn btn-setup" onclick="switchNetwork()">Setup Paseo Network</button>
         </div>
     </div>
 
@@ -47,8 +54,8 @@
             <div class="module">
                 <span class="module-header">SYSTEM_01 // HOPx EXTRACTION</span>
                 <div style="margin-bottom:15px; font-size:0.8rem;">Status: <span id="claim-status" style="color:var(--accent)">Checking...</span></div>
-                <button class="btn" id="btn-claim" onclick="runClaim()">EXECUTE CLAIM</button>
-                <button class="btn btn-outline" onclick="importTokens()">IMPORT ASSETS</button>
+                <button class="btn" id="btn-claim" onclick="runClaim()">Execute Extraction</button>
+                <button class="btn btn-outline" style="margin-top:10px" onclick="importTokens()">Add to MetaMask</button>
             </div>
 
             <div class="module">
@@ -62,34 +69,33 @@
                     <label style="font-size:0.6rem; color:#555;">RECEIVE RABx (1:200)</label>
                     <input type="number" id="swap-out" placeholder="0.0" readonly style="color:var(--accent);">
                 </div>
-                <button class="btn btn-outline" id="btn-approve" onclick="runApprove()">1. AUTHORIZE</button>
-                <button class="btn" id="btn-swap" style="display:none;" onclick="runSwap()">2. SWAP NOW</button>
+                <button class="btn btn-outline" id="btn-approve" onclick="runApprove()">1. Authorize</button>
+                <button class="btn" id="btn-swap" style="display:none;" onclick="runSwap()">2. Swap Now</button>
             </div>
         </div>
 
-        <button class="btn btn-admin" id="btn-admin-toggle" style="display:none;" onclick="toggleAdmin()">[ ADMIN CONSOLE ]</button>
+        <button class="btn btn-admin" id="btn-admin-toggle" style="display:none; margin-top:30px; border:1px solid var(--gold); color:var(--gold); background:transparent;" onclick="toggleAdmin()">[ ADMIN CONSOLE ]</button>
 
         <div id="admin-panel">
             <div>
-                <span class="module-header" style="color:var(--gold);">HOPx Admin</span>
+                <span class="module-header" style="color:var(--gold);">HOPx Manager</span>
                 <input type="text" id="adm-hop-target" placeholder="Target Address" style="margin-top:10px;">
                 <input type="number" id="adm-hop-amt" placeholder="Amount" style="margin-top:10px;">
-                <button class="btn btn-admin" onclick="adminSendTo()">SEND TO CONTRACT</button>
+                <button class="btn btn-setup" style="margin-top:10px" onclick="adminSendTo()">Send to Contract</button>
             </div>
             <div>
-                <span class="module-header" style="color:var(--gold);">RabbitSwap Admin</span>
+                <span class="module-header" style="color:var(--gold);">RabbitSwap Manager</span>
                 <input type="number" id="adm-rab-mint" placeholder="Amount to Mint" style="margin-top:10px;">
-                <button class="btn btn-admin" onclick="adminMintRAB()">MINT LIQUIDITY</button>
+                <button class="btn btn-setup" style="margin-top:10px" onclick="adminMintRAB()">Mint Liquidity</button>
             </div>
         </div>
     </div>
 
-    <div id="status-log">>> TERMINAL_READY</div>
+    <div id="status-log">>> READY_FOR_INITIALIZATION</div>
 </div>
 
 <script>
-    // PARAMETRI UFFICIALI PASEO ASSET HUB
-    const PASEO_CHAIN_ID = "0x190bc416"; // 420420422 in Hex
+    const PASEO_CHAIN_ID = "0x190bc416"; 
     const PASEO_PARAMS = {
         chainId: PASEO_CHAIN_ID,
         chainName: 'Paseo Asset Hub',
@@ -110,9 +116,7 @@
         try {
             const chainId = await window.ethereum.request({ method: 'eth_chainId' });
             if (chainId.toLowerCase() !== PASEO_CHAIN_ID.toLowerCase()) {
-                document.getElementById('btn-connect').style.display = 'none';
-                document.getElementById('btn-switch').style.display = 'inline-block';
-                updateLog("WRONG_NETWORK: SWITCH TO PASEO");
+                updateLog("WRONG_NETWORK: SETUP REQUIRED");
                 return;
             }
 
@@ -123,10 +127,7 @@
 
             setupContracts();
             showInterface();
-        } catch (e) { 
-            console.error(e);
-            updateLog("CONNECTION_REJECTED"); 
-        }
+        } catch (e) { updateLog("CONNECTION_REJECTED"); }
     }
 
     async function switchNetwork() {
@@ -135,15 +136,13 @@
                 method: 'wallet_switchEthereumChain',
                 params: [{ chainId: PASEO_CHAIN_ID }],
             });
-            location.reload();
-        } catch (switchError) {
-            if (switchError.code === 4902) {
-                try {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [PASEO_PARAMS],
-                    });
-                } catch (addError) { updateLog("FAILED_TO_ADD_NETWORK"); }
+            initConnection();
+        } catch (err) {
+            if (err.code === 4902) {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [PASEO_PARAMS],
+                });
             }
         }
     }
@@ -151,7 +150,6 @@
     function setupContracts() {
         const abiH = ["function balanceOf(address) view returns (uint256)","function claimToken() external","function lastClaim(address) view returns (uint256)","function approve(address,uint256) returns (bool)","function sendToContract(address,uint256) external"];
         const abiS = ["function swapHOPxforRABx(uint256 nIn) external","function mintRABx(uint256 n) external"];
-        
         hopCtx = new ethers.Contract(HOP_ADDR, abiH, signer);
         swapCtx = new ethers.Contract(SWAP_ADDR, abiS, signer);
     }
@@ -160,12 +158,12 @@
         document.getElementById('setup-layer').style.display = 'none';
         document.getElementById('main-layer').style.display = 'block';
         if(user.toLowerCase() === OWNER.toLowerCase()) document.getElementById('btn-admin-toggle').style.display = 'block';
-        
         updateStatus();
         refreshBal();
-        updateLog("CONNECTED: " + user.substring(0,10));
+        updateLog("TERMINAL_ONLINE: " + user.substring(0,10));
     }
 
+    // --- CORE LOGIC ---
     async function updateStatus() {
         try {
             const last = await hopCtx.lastClaim(user);
@@ -176,14 +174,12 @@
                 document.getElementById('btn-claim').disabled = true;
                 document.getElementById('btn-claim').style.opacity = "0.3";
             } else { document.getElementById('claim-status').innerText = "READY"; }
-        } catch(e) { console.log("Status check failed"); }
+        } catch(e) {}
     }
 
     async function refreshBal() {
-        try {
-            const b = await hopCtx.balanceOf(user);
-            document.getElementById('user-hop').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
-        } catch(e) { console.log("Balance refresh failed"); }
+        const b = await hopCtx.balanceOf(user);
+        document.getElementById('user-hop').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
     }
 
     function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
@@ -206,22 +202,19 @@
             const v = document.getElementById('swap-in').value;
             const tx = await swapCtx.swapHOPxforRABx(ethers.utils.parseEther(v), { gasLimit: 800000 });
             await tx.wait();
-            updateLog("SUCCESS");
+            updateLog("SWAP_SUCCESSFUL");
             setTimeout(() => location.reload(), 2000);
         } catch(e) { updateLog("SWAP_ERROR"); }
     }
 
     async function runClaim() {
         try {
-            updateLog("CLAIMING...");
+            updateLog("EXTRACTING...");
             const tx = await hopCtx.claimToken({ gasLimit: 800000 });
             await tx.wait();
-            updateLog("CLAIM_OK");
+            updateLog("CLAIM_COMPLETE");
             location.reload();
-        } catch(e) { 
-            console.error(e);
-            updateLog("CLAIM_FAILED"); 
-        }
+        } catch(e) { updateLog("CLAIM_DENIED"); }
     }
 
     function toggleAdmin() {
@@ -233,7 +226,7 @@
         const n = document.getElementById('adm-rab-mint').value;
         const tx = await swapCtx.mintRABx(ethers.utils.parseEther(n));
         await tx.wait();
-        updateLog("MINT_OK");
+        updateLog("MINT_SUCCESS");
     }
 
     async function adminSendTo() {
@@ -241,14 +234,12 @@
         const n = document.getElementById('adm-hop-amt').value;
         const tx = await hopCtx.sendToContract(t, ethers.utils.parseEther(n));
         await tx.wait();
-        updateLog("SEND_OK");
+        updateLog("SEND_SUCCESS");
     }
 
     async function importTokens() {
-        try {
-            await window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 }}});
-            await window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RABx', decimals: 18 }}});
-        } catch(e) { console.log(e); }
+        await window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 }}});
+        await window.ethereum.request({ method: 'wallet_watchAsset', params: { type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RABx', decimals: 18 }}});
     }
 
     function setMax() {
@@ -259,7 +250,7 @@
 
     function updateLog(m) { document.getElementById('status-log').innerText = ">> " + m; }
 
-    // BG Animation
+    // BG Init
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let dots = [];
@@ -276,7 +267,6 @@
         requestAnimationFrame(animate);
     }
     initDots(); animate();
-    window.addEventListener('load', initConnection);
 </script>
 </body>
 </html>
