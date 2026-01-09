@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.0.8</title>
+    <title>Rabbit Swap X | Alpha 1.0.9</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -15,7 +15,6 @@
         .module { background: rgba(5, 5, 5, 0.95); border: 1px solid var(--border); padding: 25px; border-radius: 8px; border-top: 3px solid var(--accent); text-align: left; backdrop-filter: blur(10px); }
         .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.8rem; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase; margin-bottom: 12px; border-radius: 4px; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn:disabled { opacity: 0.3; }
         #timer-display { border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.7rem; display: none; text-align: center; }
         #poh-box { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; display: none; background: #000; }
         .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
@@ -29,62 +28,67 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ALPHA 1.0.8</div>
+<div class="f-left">ALPHA 1.0.9</div>
 <div class="f-right">POWERED BY POLKADOT PASEO HUB</div>
 
 <div class="container">
     <h1>Rabbit Swap X</h1>
-    <div class="tagline">Paseo Asset Hub Protocol</div>
+    <div class="tagline">Extraction Node // Checksum Fixed</div>
 
     <div id="setup-screen" style="max-width: 400px; margin: 0 auto;">
-        <button class="btn" onclick="forceNetwork()">1. Force Paseo Network</button>
-        <button class="btn btn-outline" onclick="forceConnect()">2. Link Wallet</button>
+        <button class="btn" onclick="forceNetwork()">1. Set Network (420420422)</button>
+        <button class="btn btn-outline" onclick="forceConnect()">2. Link Metamask</button>
     </div>
 
     <div id="terminal-screen" style="display:none; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div class="module">
+            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase; margin-bottom: 10px; display: block;">Module_01 // Extraction</span>
             <div id="timer-display"></div>
-            <button class="btn btn-outline" id="btn-check" onclick="manualCheckCooldown()">Check Cooldown</button>
+            <button class="btn btn-outline" id="btn-check" onclick="manualCheckCooldown()">Inspect Cooldown</button>
+            
             <div id="poh-box">
                 <div class="target" id="poh-display">----</div>
                 <div class="poh-grid" id="poh-grid"></div>
             </div>
-            <button class="btn" id="btn-claim" style="display:none;" onclick="manualClaim()">Claim 1 HOPx</button>
+            
+            <button class="btn" id="btn-claim" style="display:none;" onclick="manualClaim()">Execute claimToken</button>
         </div>
 
         <div class="module">
-            <button class="btn btn-outline" style="height:35px; padding:0; font-size:0.7rem;" onclick="manualBalance()">Scan Balance</button>
+            <span style="font-size: 0.6rem; color: #444; text-transform: uppercase; margin-bottom: 10px; display: block;">Module_02 // Conversion</span>
+            <button class="btn btn-outline" style="height:35px; padding:0; font-size:0.7rem;" onclick="manualBalance()">Scan Assets</button>
             <div style="margin: 15px 0; text-align: left;">
-                <label style="font-size: 10px; color: #555;">MY HOPx: <span id="user-hop" style="color:var(--accent);">0.00</span></label>
+                <label style="font-size: 10px; color: #555;">Available: <span id="user-hop" style="color:var(--accent);">0.00</span> HOPx</label>
                 <input type="number" id="swap-in" placeholder="0.0" style="background:#000; border:1px solid #222; color:#fff; padding:12px; width:90%; margin-top:5px;">
             </div>
-            <button class="btn btn-outline" id="btn-approve" onclick="manualApprove()">1. Approve</button>
-            <button class="btn" id="btn-swap" style="display:none;" onclick="manualSwap()">2. Swap</button>
+            <button class="btn btn-outline" id="btn-approve" onclick="manualApprove()">Authorize</button>
+            <button class="btn" id="btn-swap" style="display:none;" onclick="manualSwap()">Swap to RABx</button>
         </div>
     </div>
 
-    <div id="debug-console">>> SYSTEM READY. WAITING FOR USER...</div>
+    <div id="debug-console">>> SYSTEM BOOT COMPLETE.</div>
 </div>
 
 <script>
-    // --- SFONDO ---
+    // --- CANVAS ANIMATION ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
     function init() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; particles = []; for (let i = 0; i < 60; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.3, vy: (Math.random()-0.5)*0.3 }); }
-    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.3)"; particles.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
+    function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.2)"; particles.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, 1, 0, Math.PI*2); ctx.fill(); }); requestAnimationFrame(animate); }
     init(); animate();
 
-    // --- CORE ---
-    const HOP_ADDR = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
-    const SWAP_ADDR = "0x73bde75a9b1E0a13B76624A51371f78FE579d478";
+    // --- BLOCKCHAIN LOGIC ---
+    // Uso indirizzi minuscoli e applico getAddress() di ethers per sicurezza
+    const RAW_HOP = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
+    const RAW_SWAP = "0x73bde75a9b1E0a13B76624A51371f78FE579d478";
     
     let userAddr, step = 0, sequence = [];
 
     function dbg(m) { const c = document.getElementById('debug-console'); c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; }
 
     async function forceNetwork() {
-        dbg("FORCING_NETWORK_SWITCH...");
+        dbg("SWITCHING_TO_PASEO_HUB...");
         try {
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
@@ -96,40 +100,42 @@
                     blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
                 }]
             });
-            dbg("NETWORK_OK");
-        } catch (e) { dbg("NET_ERR: " + e.message); }
+            dbg("NETWORK_LINKED");
+        } catch (e) { dbg("NET_ERROR: " + e.message); }
     }
 
     async function forceConnect() {
-        dbg("FORCING_WALLET_LINK...");
+        dbg("ESTABLISHING_METAMASK_BRIDGE...");
         try {
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAddr = accounts[0];
+            userAddr = ethers.utils.getAddress(accounts[0]); // Checksummed address
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('terminal-screen').style.display = 'grid';
-            dbg("LINK_OK: " + userAddr);
-        } catch (e) { dbg("LINK_ERR: " + e.message); }
+            dbg("BRIDGE_READY: " + userAddr.substring(0,10));
+        } catch (e) { dbg("BRIDGE_FAILED: " + e.message); }
     }
 
     async function manualCheckCooldown() {
-        dbg("RPC_CALL: lastClaim...");
+        dbg("POLLING_COOLDOWN_STATE...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(HOP_ADDR, ["function lastClaim(address) view returns (uint256)"], provider);
+            const cleanAddr = ethers.utils.getAddress(RAW_HOP);
+            const contract = new ethers.Contract(cleanAddr, ["function lastClaim(address) view returns (uint256)"], provider);
+            
             const last = await contract.lastClaim(userAddr);
-            const next = parseInt(last) + 604800;
             const now = Math.floor(Date.now() / 1000);
+            const next = parseInt(last) + 604800;
 
             if (now < next && parseInt(last) !== 0) {
                 document.getElementById('timer-display').style.display = 'block';
                 startTimer(next);
-                dbg("STATUS: COOLDOWN");
+                dbg("RESULT: SYSTEM_LOCKED");
             } else {
                 document.getElementById('btn-check').style.display = 'none';
                 startPoh();
-                dbg("STATUS: READY");
+                dbg("RESULT: SYSTEM_READY");
             }
-        } catch (e) { dbg("RPC_ERR: " + e.message); }
+        } catch (e) { dbg("RPC_FAIL: " + e.message); }
     }
 
     function startTimer(target) {
@@ -138,7 +144,7 @@
             const diff = target - Math.floor(Date.now() / 1000);
             if (diff <= 0) location.reload();
             const d = Math.floor(diff/86400), h = Math.floor((diff%86400)/3600), m = Math.floor((diff%3600)/60), s = diff%60;
-            div.innerText = `LOCKED: ${d}D ${h}H ${m}M ${s}S`;
+            div.innerText = `UNLOCK IN: ${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
     }
 
@@ -156,7 +162,7 @@
                     if(step === 4) {
                         document.getElementById('poh-box').style.display = 'none';
                         document.getElementById('btn-claim').style.display = 'block';
-                        dbg("POH_OK");
+                        dbg("PROOF_ACCEPTED");
                     }
                 } else { step = 0; startPoh(); }
             };
@@ -165,57 +171,61 @@
     }
 
     async function manualClaim() {
-        dbg("TX_SEND: claimToken...");
+        dbg("INITIATING_TRANSACTION...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], signer);
+            const cleanAddr = ethers.utils.getAddress(RAW_HOP);
+            const contract = new ethers.Contract(cleanAddr, ["function claimToken() external"], signer);
             const tx = await contract.claimToken();
-            dbg("TX_HASH: " + tx.hash);
+            dbg("PENDING: " + tx.hash.substring(0,12));
             await tx.wait();
-            dbg("TX_CONFIRMED");
+            dbg("SUCCESS: EXTRACTION_COMPLETE");
             location.reload();
-        } catch (e) { dbg("TX_ERR: " + e.message); }
+        } catch (e) { dbg("TX_REVERTED: Check PAS balance."); }
     }
 
     async function manualBalance() {
-        dbg("RPC_CALL: balanceOf...");
+        dbg("SCANNING_WALLET...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(HOP_ADDR, ["function balanceOf(address) view returns (uint256)"], provider);
+            const cleanAddr = ethers.utils.getAddress(RAW_HOP);
+            const contract = new ethers.Contract(cleanAddr, ["function balanceOf(address) view returns (uint256)"], provider);
             const bal = await contract.balanceOf(userAddr);
             document.getElementById('user-hop').innerText = ethers.utils.formatEther(bal);
-            dbg("BAL_OK");
-        } catch (e) { dbg("BAL_ERR: " + e.message); }
+            dbg("SCAN_COMPLETE");
+        } catch (e) { dbg("SCAN_ERROR: " + e.message); }
     }
 
     async function manualApprove() {
-        dbg("TX_SEND: approve...");
+        dbg("REQUESTING_AUTH...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const contract = new ethers.Contract(HOP_ADDR, ["function approve(address,uint256) returns (bool)"], signer);
+            const cleanAddr = ethers.utils.getAddress(RAW_HOP);
+            const contract = new ethers.Contract(cleanAddr, ["function approve(address,uint256) returns (bool)"], signer);
             const val = document.getElementById('swap-in').value;
-            const tx = await contract.approve(SWAP_ADDR, ethers.utils.parseEther(val));
+            const tx = await contract.approve(ethers.utils.getAddress(RAW_SWAP), ethers.utils.parseEther(val));
             await tx.wait();
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            dbg("APPROVE_OK");
-        } catch (e) { dbg("APPROVE_ERR: " + e.message); }
+            dbg("AUTH_GRANTED");
+        } catch (e) { dbg("AUTH_REJECTED"); }
     }
 
     async function manualSwap() {
-        dbg("TX_SEND: swap...");
+        dbg("CONVERTING_ASSETS...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const signer = provider.getSigner();
-            const contract = new ethers.Contract(SWAP_ADDR, ["function swapHOPxforRABx(uint256) external"], signer);
+            const cleanSwap = ethers.utils.getAddress(RAW_SWAP);
+            const contract = new ethers.Contract(cleanSwap, ["function swapHOPxforRABx(uint256) external"], signer);
             const val = document.getElementById('swap-in').value;
             const tx = await contract.swapHOPxforRABx(ethers.utils.parseEther(val));
             await tx.wait();
-            dbg("SWAP_OK");
+            dbg("CONVERSION_SUCCESS");
             manualBalance();
-        } catch (e) { dbg("SWAP_ERR: " + e.message); }
+        } catch (e) { dbg("SWAP_FAILED: Check Liquidity"); }
     }
 </script>
 </body>
