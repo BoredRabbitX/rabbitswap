@@ -3,147 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X | Terminal</title>
+    <title>Rabbit Swap X | Alpha 1.0.3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #000; --fg: #fff; --accent: #e6007a; --border: #1a1a1a; --gold: #ffcc00; }
-        body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; min-height: 100vh; overflow-x: hidden; }
+        :root { --bg: #000; --fg: #fff; --accent: #e6007a; --border: #1a1a1a; }
+        body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-        
-        .main-wrapper { max-width: 900px; margin: 0 auto; text-align: center; }
-        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.5rem; margin-top: 40px; letter-spacing: -2px; text-transform: uppercase; }
+        .container { width: 100%; max-width: 900px; text-align: center; position: relative; z-index: 1; }
+        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.5rem; margin: 0; letter-spacing: -2px; text-transform: uppercase; }
         .tagline { font-size: 0.7rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 40px; text-transform: uppercase; }
-
-        #setup-screen { max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.8); padding: 30px; border: 1px solid var(--border); border-radius: 8px; }
-        
+        #setup-screen { max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.85); padding: 30px; border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(10px); }
         .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; display: none; }
         @media (max-width: 768px) { .dual-grid { grid-template-columns: 1fr; } }
-
-        .module { background: rgba(5, 5, 5, 0.9); border: 1px solid var(--border); padding: 25px; border-radius: 8px; border-top: 3px solid var(--accent); text-align: left; }
+        .module { background: rgba(5, 5, 5, 0.9); border: 1px solid var(--border); padding: 25px; border-radius: 8px; border-top: 3px solid var(--accent); text-align: left; backdrop-filter: blur(10px); }
         .module-header { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid #151515; padding-bottom: 8px; font-weight: 700; display: block; }
-
-        .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.8rem; font-weight: 700; border-radius: 4px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.2s; margin-bottom: 10px; }
-        .btn:hover { background: #ccc; }
+        .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.8rem; font-weight: 700; border-radius: 4px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.2s; margin-bottom: 12px; }
+        .btn:hover:not(:disabled) { background: #ccc; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-        .btn-admin { border: 1px solid var(--gold); color: var(--gold); background: transparent; font-size: 0.6rem; margin-top: 20px; }
-
+        .btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        /* TIMER STYLE */
+        #timer-display { background: rgba(255, 62, 62, 0.1); border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.75rem; display: none; }
         .input-group { margin-bottom: 15px; }
         label { font-size: 0.65rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 8px; }
         input { background: #000; border: 1px solid #222; color: #fff; padding: 14px; width: calc(100% - 30px); border-radius: 4px; font-family: 'Inter'; outline: none; }
-        
-        #timer-display { color: #ff3e3e; font-family: 'Unbounded'; font-size: 0.7rem; margin-bottom: 10px; display: none; }
-        #status { margin-top: 40px; font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 2px; }
+        #status { margin-top: 40px; font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
         .bal-link { color: var(--accent); cursor: pointer; text-decoration: underline; font-weight: 700; }
+        .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'Unbounded'; font-size: 10px; color: #444; text-transform: uppercase; }
+        .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'Unbounded'; font-size: 10px; color: var(--accent); text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
+<div class="f-left">ALPHA 1.0.3</div>
+<div class="f-right">POWERED BY POLKADOT PASEO HUB</div>
 
-<div class="main-wrapper">
+<div class="container">
     <h1>Rabbit Swap X</h1>
-    <div class="tagline">Paseo Asset Hub // v2.4</div>
+    <div class="tagline">Extraction & Conversion Terminal</div>
 
     <div id="setup-screen">
-        <button class="btn" onclick="addNetwork()">1. Configure Paseo Network</button>
-        <button class="btn btn-outline" onclick="connect()">2. Connect Wallet</button>
+        <button class="btn" onclick="addNetwork()">1. Configure Paseo Hub</button>
+        <button class="btn btn-outline" onclick="connect()">2. Link Wallet</button>
     </div>
 
     <div id="terminal-screen" class="dual-grid">
         <div class="module">
-            <span class="module-header">Module 01 // Extraction</span>
-            <div id="timer-display"></div>
+            <span class="module-header">System 01 // Extraction</span>
+            <div id="timer-display">NEXT CLAIM IN: --D --H --M --S</div>
             <button class="btn" id="btn-claim" onclick="claim()">Claim 1 HOPx</button>
-            <button class="btn btn-outline" style="font-size:0.6rem" onclick="watchAssets()">Import Tokens to Wallet</button>
+            <button class="btn btn-outline" style="font-size:0.6rem" onclick="watchAssets()">Import Assets to MetaMask</button>
         </div>
 
         <div class="module">
-            <span class="module-header">Module 02 // Conversion</span>
+            <span class="module-header">System 02 // Conversion</span>
             <div class="input-group">
-                <label>Send HOPx (My Wallet: <span class="bal-link" id="user-hop" onclick="setMax()">0.00</span>)</label>
+                <label>Send HOPx (Wallet: <span class="bal-link" id="user-hop" onclick="refreshBalance()">0.00</span>)</label>
                 <input type="number" id="swap-in" placeholder="0.0" oninput="calcSwap(this.value)">
             </div>
-            <div style="text-align:center; color:#222; margin-bottom:15px;">↓ 1:200 ↓</div>
+            <div style="text-align:center; color:#222; margin-bottom:15px; font-size: 1.2rem;">⇆</div>
             <div class="input-group">
-                <label>Receive RABx</label>
-                <input type="number" id="swap-out" placeholder="0.0" readonly style="color:var(--accent)">
+                <label>Receive RABx (Rate 1:200)</label>
+                <input type="number" id="swap-out" placeholder="0.0" readonly style="color:var(--accent); font-weight:bold;">
             </div>
             <button class="btn btn-outline" id="btn-approve" onclick="approve()">1. Authorize</button>
             <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">2. Execute Swap</button>
         </div>
     </div>
 
-    <div id="status">System Link Required...</div>
+    <div id="status">Waiting for system link...</div>
 </div>
 
 <script>
-    // --- ANIMAZIONE FLUIDA ---
+    // --- SFONDO RAGNATELA ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
-    let dots = [];
-    const mouse = { x: null, y: null };
-    window.addEventListener('mousemove', e => { mouse.x = e.x; mouse.y = e.y; });
-
-    function init() {
+    let particles = [];
+    function initParticles() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        dots = [];
+        particles = [];
         for (let i = 0; i < 80; i++) {
-            dots.push({
-                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                size: Math.random() * 2 + 1,
-                vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4
-            });
+            particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: 1.5 });
         }
     }
-
-    function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        dots.forEach(d => {
-            d.x += d.vx; d.y += d.vy;
-            if (d.x < 0 || d.x > canvas.width) d.vx *= -1;
-            if (d.y < 0 || d.y > canvas.height) d.vy *= -1;
-            let dist = Math.hypot(mouse.x - d.x, mouse.y - d.y);
-            if (dist < 120) {
-                d.x -= (mouse.x - d.x) * 0.015;
-                d.y -= (mouse.y - d.y) * 0.015;
+    function drawParticles() {
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.5)";
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy;
+            if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            for (let j=i+1; j<particles.length; j++) {
+                let p2 = particles[j]; let dist = Math.hypot(p.x-p2.x, p.y-p2.y);
+                if (dist < 120) {
+                    ctx.strokeStyle = `rgba(255,255,255,${1 - dist/120 - 0.7})`;
+                    ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                }
             }
-            ctx.fillStyle = "rgba(255,255,255,0.3)";
-            ctx.beginPath(); ctx.arc(d.x, d.y, d.size, 0, Math.PI*2); ctx.fill();
         });
-        requestAnimationFrame(animate);
+        requestAnimationFrame(drawParticles);
     }
-    init(); animate();
-    window.addEventListener('resize', init);
+    initParticles(); drawParticles(); window.addEventListener('resize', initParticles);
 
-    // --- LOGICA BLOCKCHAIN ---
+    // --- BLOCKCHAIN LOGIC ---
     const HOP_ADDR = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
     const SWAP_ADDR = "0x73bde75a9b1E0a13B76624A51371f78FE579d478";
-    
-    // ABI Sincronizzate con i tuoi contratti
-    const HOP_ABI = [
+    const PASEO_CHAIN_ID = "0x190bc416";
+    const ABI = [
         "function claimToken() external", 
         "function lastClaim(address) view returns (uint256)",
         "function balanceOf(address) view returns (uint256)",
-        "function approve(address,uint256) returns (bool)"
+        "function approve(address,uint256) returns (bool)",
+        "function swapHOPxforRABx(uint256) external"
     ];
-    const SWAP_ABI = ["function swapHOPxforRABx(uint256 nIn) external"];
 
-    let provider, signer, hopContract, swapContract, userAddr;
+    let provider, signer, hopContract, swapContract, userAddr, timerInterval;
 
     async function addNetwork() {
         try {
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                    chainId: '0x190bc416', // 420420422
-                    chainName: 'Paseo Asset Hub',
+                    chainId: PASEO_CHAIN_ID, chainName: 'Paseo Asset Hub',
                     nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
                     rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
                     blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
                 }]
             });
-            document.getElementById('status').innerText = "Network Configured";
+            document.getElementById('status').innerText = "Network Ready";
         } catch (e) { console.error(e); }
     }
 
@@ -154,103 +141,110 @@
             await provider.send("eth_requestAccounts", []);
             signer = provider.getSigner();
             userAddr = await signer.getAddress();
-            
-            hopContract = new ethers.Contract(HOP_ADDR, HOP_ABI, signer);
-            swapContract = new ethers.Contract(SWAP_ADDR, SWAP_ABI, signer);
+            hopContract = new ethers.Contract(HOP_ADDR, ABI, signer);
+            swapContract = new ethers.Contract(SWAP_ADDR, ABI, signer);
 
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('terminal-screen').style.display = 'grid';
             
             checkCooldown();
             refreshBalance();
-        } catch (e) { document.getElementById('status').innerText = "Link Error"; }
-    }
-
-    async function refreshBalance() {
-        try {
-            const bal = await hopContract.balanceOf(userAddr);
-            document.getElementById('user-hop').innerText = parseFloat(ethers.utils.formatEther(bal)).toFixed(2);
-            document.getElementById('status').innerText = "Assets Synced";
-        } catch (e) { console.error(e); }
+            document.getElementById('status').innerText = "Link Active: " + userAddr.substring(0,6)+"..."+userAddr.slice(-4);
+        } catch (e) { document.getElementById('status').innerText = "Link Failed"; }
     }
 
     async function checkCooldown() {
         try {
             const last = await hopContract.lastClaim(userAddr);
-            const next = (parseInt(last) + 604800);
+            const nextClaimTime = (parseInt(last) + 604800);
             const now = Math.floor(Date.now() / 1000);
-            if (now < next && parseInt(last) !== 0) {
-                startTimer(next);
+
+            if (now < nextClaimTime && parseInt(last) !== 0) {
                 document.getElementById('btn-claim').disabled = true;
+                startCountdown(nextClaimTime);
+            } else {
+                document.getElementById('timer-display').style.display = 'none';
+                document.getElementById('btn-claim').disabled = false;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Cooldown check error:", e); }
     }
 
-    function startTimer(next) {
-        const div = document.getElementById('timer-display');
-        div.style.display = 'block';
-        const update = () => {
-            const diff = next - Math.floor(Date.now() / 1000);
-            if (diff <= 0) return location.reload();
-            const h = Math.floor(diff / 3600);
+    function startCountdown(targetTimestamp) {
+        const display = document.getElementById('timer-display');
+        display.style.display = 'block';
+
+        if(timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+            const now = Math.floor(Date.now() / 1000);
+            const diff = targetTimestamp - now;
+
+            if (diff <= 0) {
+                clearInterval(timerInterval);
+                display.style.display = 'none';
+                document.getElementById('btn-claim').disabled = false;
+                document.getElementById('status').innerText = "Ready to Claim";
+                return;
+            }
+
+            const d = Math.floor(diff / 86400);
+            const h = Math.floor((diff % 86400) / 3600);
             const m = Math.floor((diff % 3600) / 60);
             const s = diff % 60;
-            div.innerText = `COOLDOWN: ${h}H ${m}M ${s}S`;
-        };
-        update(); setInterval(update, 1000);
+
+            display.innerText = `NEXT CLAIM IN: ${d}D ${h}H ${m}M ${s}S`;
+        }, 1000);
     }
 
     async function claim() {
         try {
-            document.getElementById('status').innerText = "Executing Claim...";
-            const tx = await hopContract.claimToken();
+            document.getElementById('status').innerText = "Broadcasting...";
+            const tx = await hopContract.claimToken({ gasLimit: 500000 });
             await tx.wait();
-            document.getElementById('status').innerText = "Success!";
-            refreshBalance();
-        } catch (e) { document.getElementById('status').innerText = "Claim Denied (Check Gas)"; }
+            document.getElementById('status').innerText = "Success! Reloading...";
+            setTimeout(() => location.reload(), 2000);
+        } catch (e) { 
+            document.getElementById('status').innerText = "Denied: Check Cooldown/Gas"; 
+        }
     }
 
+    // --- SWAP LOGIC ---
+    async function refreshBalance() {
+        try {
+            const bal = await hopContract.balanceOf(userAddr);
+            document.getElementById('user-hop').innerText = parseFloat(ethers.utils.formatEther(bal)).toFixed(2);
+        } catch (e) { console.error(e); }
+    }
     function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
-
     async function approve() {
         try {
             const val = document.getElementById('swap-in').value;
-            document.getElementById('status').innerText = "Authorizing...";
+            if(!val || val <= 0) return alert("Invalid amount");
+            document.getElementById('status').innerText = "Approving...";
             const tx = await hopContract.approve(SWAP_ADDR, ethers.utils.parseEther(val));
             await tx.wait();
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            document.getElementById('status').innerText = "Authorized";
+            document.getElementById('status').innerText = "Approved";
         } catch (e) { document.getElementById('status').innerText = "Auth Failed"; }
     }
-
     async function swap() {
         try {
             const val = document.getElementById('swap-in').value;
-            document.getElementById('status').innerText = "Converting...";
-            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(val));
+            document.getElementById('status').innerText = "Swapping...";
+            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(val), { gasLimit: 500000 });
             await tx.wait();
-            document.getElementById('status').innerText = "Swap Success!";
+            document.getElementById('status').innerText = "Swap Done!";
             refreshBalance();
         } catch (e) { document.getElementById('status').innerText = "Swap Failed"; }
     }
-
     async function watchAssets() {
-        await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
-            type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 } 
-        }});
-        await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
-            type: 'ERC20', options: { address: SWAP_ADDR, symbol: 'RABx', decimals: 18 } 
-        }});
+        try {
+            await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
+                type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 } 
+            }});
+        } catch(e) {}
     }
-
-    function setMax() {
-        const b = document.getElementById('user-hop').innerText;
-        document.getElementById('swap-in').value = b;
-        calcSwap(b);
-    }
-
-    function updateLog(m) { document.getElementById('status').innerText = m; }
 </script>
 </body>
 </html>
