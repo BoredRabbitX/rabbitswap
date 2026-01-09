@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X | Alpha 1.0.3</title>
+    <title>Rabbit Swap X | Alpha 1.0.4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -11,7 +11,7 @@
         body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
         .container { width: 100%; max-width: 900px; text-align: center; position: relative; z-index: 1; }
-        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.5rem; margin: 0; letter-spacing: -2px; text-transform: uppercase; }
+        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.8rem; margin: 0; letter-spacing: -2px; text-transform: uppercase; }
         .tagline { font-size: 0.7rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 40px; text-transform: uppercase; }
         #setup-screen { max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.85); padding: 30px; border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(10px); }
         .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; display: none; }
@@ -22,8 +22,7 @@
         .btn:hover:not(:disabled) { background: #ccc; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
         .btn:disabled { opacity: 0.2; cursor: not-allowed; }
-        /* TIMER STYLE */
-        #timer-display { background: rgba(255, 62, 62, 0.1); border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.75rem; display: none; }
+        #timer-display { background: rgba(255, 62, 62, 0.1); border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.75rem; display: none; text-align: center; }
         .input-group { margin-bottom: 15px; }
         label { font-size: 0.65rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 8px; }
         input { background: #000; border: 1px solid #222; color: #fff; padding: 14px; width: calc(100% - 30px); border-radius: 4px; font-family: 'Inter'; outline: none; }
@@ -36,85 +35,89 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ALPHA 1.0.3</div>
+<div class="f-left">ALPHA 1.0.4</div>
 <div class="f-right">POWERED BY POLKADOT PASEO HUB</div>
 
 <div class="container">
     <h1>Rabbit Swap X</h1>
-    <div class="tagline">Extraction & Conversion Terminal</div>
+    <div class="tagline">Paseo Asset Hub Protocol</div>
 
     <div id="setup-screen">
-        <button class="btn" onclick="addNetwork()">1. Configure Paseo Hub</button>
+        <button class="btn" onclick="addNetwork()">1. Configure Network</button>
         <button class="btn btn-outline" onclick="connect()">2. Link Wallet</button>
     </div>
 
     <div id="terminal-screen" class="dual-grid">
         <div class="module">
             <span class="module-header">System 01 // Extraction</span>
-            <div id="timer-display">NEXT CLAIM IN: --D --H --M --S</div>
-            <button class="btn" id="btn-claim" onclick="claim()">Claim 1 HOPx</button>
-            <button class="btn btn-outline" style="font-size:0.6rem" onclick="watchAssets()">Import Assets to MetaMask</button>
+            <div id="timer-display">SYNCING COOLDOWN...</div>
+            <button class="btn" id="btn-claim" onclick="claim()">Execute claimToken</button>
+            <button class="btn btn-outline" style="font-size:0.6rem" onclick="watchAssets()">Watch HOPx Assets</button>
         </div>
 
         <div class="module">
             <span class="module-header">System 02 // Conversion</span>
             <div class="input-group">
-                <label>Send HOPx (Wallet: <span class="bal-link" id="user-hop" onclick="refreshBalance()">0.00</span>)</label>
-                <input type="number" id="swap-in" placeholder="0.0" oninput="calcSwap(this.value)">
+                <label>Wallet Balance: <span class="bal-link" id="user-hop" onclick="refreshBalance()">0.00</span> HOPx</label>
+                <input type="number" id="swap-in" placeholder="Amount to swap" oninput="calcSwap(this.value)">
             </div>
-            <div style="text-align:center; color:#222; margin-bottom:15px; font-size: 1.2rem;">⇆</div>
+            <div style="text-align:center; color:#222; margin:10px 0;">⇅ RATE 1:200 ⇅</div>
             <div class="input-group">
-                <label>Receive RABx (Rate 1:200)</label>
-                <input type="number" id="swap-out" placeholder="0.0" readonly style="color:var(--accent); font-weight:bold;">
+                <label>Receive RABx</label>
+                <input type="number" id="swap-out" readonly style="color:var(--accent); font-weight:bold;">
             </div>
-            <button class="btn btn-outline" id="btn-approve" onclick="approve()">1. Authorize</button>
-            <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">2. Execute Swap</button>
+            <button class="btn btn-outline" id="btn-approve" onclick="approve()">Step 1: Approve</button>
+            <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">Step 2: Swap</button>
         </div>
     </div>
 
-    <div id="status">Waiting for system link...</div>
+    <div id="status">INITIALIZING...</div>
 </div>
 
 <script>
-    // --- SFONDO RAGNATELA ---
+    // --- BACKGROUND ENGINE (RAGNATELA) ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
     function initParticles() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         particles = [];
-        for (let i = 0; i < 80; i++) {
-            particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5, size: 1.5 });
+        for (let i = 0; i < 90; i++) {
+            particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.6, vy: (Math.random()-0.5)*0.6, size: 1.2 });
         }
     }
-    function drawParticles() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.5)";
+    function draw() {
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.4)";
         particles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy;
             if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
             for (let j=i+1; j<particles.length; j++) {
                 let p2 = particles[j]; let dist = Math.hypot(p.x-p2.x, p.y-p2.y);
-                if (dist < 120) {
-                    ctx.strokeStyle = `rgba(255,255,255,${1 - dist/120 - 0.7})`;
+                if (dist < 130) {
+                    ctx.strokeStyle = `rgba(255,255,255,${1 - dist/130 - 0.75})`;
                     ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
                 }
             }
         });
-        requestAnimationFrame(drawParticles);
+        requestAnimationFrame(draw);
     }
-    initParticles(); drawParticles(); window.addEventListener('resize', initParticles);
+    initParticles(); draw(); window.addEventListener('resize', initParticles);
 
-    // --- BLOCKCHAIN LOGIC ---
+    // --- CONTRACT DATA ---
     const HOP_ADDR = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
     const SWAP_ADDR = "0x73bde75a9b1E0a13B76624A51371f78FE579d478";
-    const PASEO_CHAIN_ID = "0x190bc416";
-    const ABI = [
-        "function claimToken() external", 
+    const PASEO_HUB_RPC = "https://testnet-passet-hub-eth-rpc.polkadot.io";
+    
+    // ABI ESATTA DAL TUO JSON
+    const FULL_ABI = [
+        "function claimToken() external",
         "function lastClaim(address) view returns (uint256)",
         "function balanceOf(address) view returns (uint256)",
-        "function approve(address,uint256) returns (bool)",
-        "function swapHOPxforRABx(uint256) external"
+        "function COOLDOWN() view returns (uint256)",
+        "function decimals() view returns (uint8)",
+        "function transfer(address to, uint256 amount) returns (bool)",
+        "function swapHOPxforRABx(uint256) external" // Includiamo anche per il secondo contratto
     ];
 
     let provider, signer, hopContract, swapContract, userAddr, timerInterval;
@@ -124,126 +127,136 @@
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                    chainId: PASEO_CHAIN_ID, chainName: 'Paseo Asset Hub',
+                    chainId: '0x190bc416',
+                    chainName: 'Paseo Asset Hub',
                     nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
+                    rpcUrls: [PASEO_HUB_RPC],
                     blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
                 }]
             });
-            document.getElementById('status').innerText = "Network Ready";
+            document.getElementById('status').innerText = "Network Configured";
         } catch (e) { console.error(e); }
     }
 
     async function connect() {
-        if (!window.ethereum) return alert("MetaMask not found");
+        if (!window.ethereum) return alert("MetaMask not detected");
         try {
             provider = new ethers.providers.Web3Provider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
             signer = provider.getSigner();
             userAddr = await signer.getAddress();
-            hopContract = new ethers.Contract(HOP_ADDR, ABI, signer);
-            swapContract = new ethers.Contract(SWAP_ADDR, ABI, signer);
+            
+            // Inizializzazione con ABI completa
+            hopContract = new ethers.Contract(HOP_ADDR, FULL_ABI, signer);
+            swapContract = new ethers.Contract(SWAP_ADDR, FULL_ABI, signer);
 
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('terminal-screen').style.display = 'grid';
             
-            checkCooldown();
-            refreshBalance();
-            document.getElementById('status').innerText = "Link Active: " + userAddr.substring(0,6)+"..."+userAddr.slice(-4);
+            document.getElementById('status').innerText = "LINKED: " + userAddr.substring(0,6) + "...";
+            
+            runSync();
         } catch (e) { document.getElementById('status').innerText = "Link Failed"; }
+    }
+
+    async function runSync() {
+        await refreshBalance();
+        await checkCooldown();
+    }
+
+    async function refreshBalance() {
+        try {
+            const bal = await hopContract.balanceOf(userAddr);
+            const dec = await hopContract.decimals();
+            document.getElementById('user-hop').innerText = ethers.utils.formatUnits(bal, dec);
+        } catch (e) { console.error("Balance sync error", e); }
     }
 
     async function checkCooldown() {
         try {
             const last = await hopContract.lastClaim(userAddr);
-            const nextClaimTime = (parseInt(last) + 604800);
+            const cooldownPeriod = await hopContract.COOLDOWN(); 
             const now = Math.floor(Date.now() / 1000);
+            const nextAvailable = parseInt(last) + parseInt(cooldownPeriod);
 
-            if (now < nextClaimTime && parseInt(last) !== 0) {
+            if (now < nextAvailable && parseInt(last) !== 0) {
                 document.getElementById('btn-claim').disabled = true;
-                startCountdown(nextClaimTime);
+                startCountdown(nextAvailable);
             } else {
                 document.getElementById('timer-display').style.display = 'none';
                 document.getElementById('btn-claim').disabled = false;
+                document.getElementById('status').innerText = "System Ready";
             }
-        } catch (e) { console.error("Cooldown check error:", e); }
+        } catch (e) { console.error("Cooldown sync error", e); }
     }
 
-    function startCountdown(targetTimestamp) {
+    function startCountdown(target) {
         const display = document.getElementById('timer-display');
         display.style.display = 'block';
-
         if(timerInterval) clearInterval(timerInterval);
 
         timerInterval = setInterval(() => {
             const now = Math.floor(Date.now() / 1000);
-            const diff = targetTimestamp - now;
-
+            const diff = target - now;
             if (diff <= 0) {
                 clearInterval(timerInterval);
-                display.style.display = 'none';
-                document.getElementById('btn-claim').disabled = false;
-                document.getElementById('status').innerText = "Ready to Claim";
+                location.reload();
                 return;
             }
-
             const d = Math.floor(diff / 86400);
             const h = Math.floor((diff % 86400) / 3600);
             const m = Math.floor((diff % 3600) / 60);
             const s = diff % 60;
-
-            display.innerText = `NEXT CLAIM IN: ${d}D ${h}H ${m}M ${s}S`;
+            display.innerText = `NEXT CLAIM: ${d}D ${h}H ${m}M ${s}S`;
         }, 1000);
     }
 
     async function claim() {
         try {
-            document.getElementById('status').innerText = "Broadcasting...";
-            const tx = await hopContract.claimToken({ gasLimit: 500000 });
+            document.getElementById('status').innerText = "Broadcasting Claim...";
+            const tx = await hopContract.claimToken();
+            document.getElementById('status').innerText = "Mining Transaction...";
             await tx.wait();
-            document.getElementById('status').innerText = "Success! Reloading...";
-            setTimeout(() => location.reload(), 2000);
+            document.getElementById('status').innerText = "Claim Success!";
+            runSync();
         } catch (e) { 
-            document.getElementById('status').innerText = "Denied: Check Cooldown/Gas"; 
+            document.getElementById('status').innerText = "Claim Denied (Check PAS Gas)"; 
         }
     }
 
-    // --- SWAP LOGIC ---
-    async function refreshBalance() {
-        try {
-            const bal = await hopContract.balanceOf(userAddr);
-            document.getElementById('user-hop').innerText = parseFloat(ethers.utils.formatEther(bal)).toFixed(2);
-        } catch (e) { console.error(e); }
-    }
     function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
+
     async function approve() {
         try {
             const val = document.getElementById('swap-in').value;
-            if(!val || val <= 0) return alert("Invalid amount");
-            document.getElementById('status').innerText = "Approving...";
-            const tx = await hopContract.approve(SWAP_ADDR, ethers.utils.parseEther(val));
+            document.getElementById('status').innerText = "Approving Swap...";
+            // Usiamo transfer o approve? Se il contratto swap non è un router standard, 
+            // di solito si usa l'approve verso l'indirizzo dello swap.
+            // Nota: Se il tuo ABI non ha 'approve', useremo una versione generica ERC20.
+            const erc20 = new ethers.Contract(HOP_ADDR, ["function approve(address,uint256) returns (bool)"], signer);
+            const tx = await erc20.approve(SWAP_ADDR, ethers.utils.parseEther(val));
             await tx.wait();
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            document.getElementById('status').innerText = "Approved";
-        } catch (e) { document.getElementById('status').innerText = "Auth Failed"; }
+            document.getElementById('status').innerText = "Approved!";
+        } catch (e) { document.getElementById('status').innerText = "Auth Error"; }
     }
+
     async function swap() {
         try {
             const val = document.getElementById('swap-in').value;
-            document.getElementById('status').innerText = "Swapping...";
-            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(val), { gasLimit: 500000 });
+            document.getElementById('status').innerText = "Executing Swap...";
+            const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(val));
             await tx.wait();
-            document.getElementById('status').innerText = "Swap Done!";
-            refreshBalance();
-        } catch (e) { document.getElementById('status').innerText = "Swap Failed"; }
+            document.getElementById('status').innerText = "Swap Success!";
+            runSync();
+        } catch (e) { document.getElementById('status').innerText = "Swap Denied"; }
     }
+
     async function watchAssets() {
-        try {
-            await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
-                type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 } 
-            }});
-        } catch(e) {}
+        await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
+            type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 } 
+        }});
     }
 </script>
 </body>
