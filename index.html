@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X | Alpha 1.0.4</title>
+    <title>Rabbit Swap X | Alpha 1.0.5</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -11,116 +11,127 @@
         body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
         .container { width: 100%; max-width: 900px; text-align: center; position: relative; z-index: 1; }
-        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.8rem; margin: 0; letter-spacing: -2px; text-transform: uppercase; }
+        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.5rem; margin: 0; letter-spacing: -2px; text-transform: uppercase; }
         .tagline { font-size: 0.7rem; color: var(--accent); letter-spacing: 3px; margin-bottom: 40px; text-transform: uppercase; }
+
         #setup-screen { max-width: 400px; margin: 0 auto; background: rgba(0,0,0,0.85); padding: 30px; border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(10px); }
         .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; display: none; }
         @media (max-width: 768px) { .dual-grid { grid-template-columns: 1fr; } }
+
         .module { background: rgba(5, 5, 5, 0.9); border: 1px solid var(--border); padding: 25px; border-radius: 8px; border-top: 3px solid var(--accent); text-align: left; backdrop-filter: blur(10px); }
         .module-header { font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; border-bottom: 1px solid #151515; padding-bottom: 8px; font-weight: 700; display: block; }
+
         .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 18px; font-size: 0.8rem; font-weight: 700; border-radius: 4px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.2s; margin-bottom: 12px; }
         .btn:hover:not(:disabled) { background: #ccc; }
         .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
         .btn:disabled { opacity: 0.2; cursor: not-allowed; }
-        #timer-display { background: rgba(255, 62, 62, 0.1); border: 1px solid #300; color: #ff3e3e; padding: 15px; margin-bottom: 12px; border-radius: 4px; font-family: 'Unbounded'; font-size: 0.75rem; display: none; text-align: center; }
-        .input-group { margin-bottom: 15px; }
-        label { font-size: 0.65rem; color: #555; text-transform: uppercase; display: block; margin-bottom: 8px; }
-        input { background: #000; border: 1px solid #222; color: #fff; padding: 14px; width: calc(100% - 30px); border-radius: 4px; font-family: 'Inter'; outline: none; }
+
+        #timer-display { height: 50px; border: 1px solid #300; color: #ff3e3e; display: none; align-items: center; justify-content: center; font-family: 'Unbounded'; font-size: 0.7rem; margin-bottom: 12px; border-radius: 4px; }
+        
+        /* PoH Styles */
+        #poh-box { border: 1px solid var(--border); padding: 15px; margin-bottom: 15px; display: none; background: #050505; border-radius: 4px; }
+        .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+        .poh-cell { background: #000; border: 1px solid #222; padding: 10px; cursor: pointer; text-align: center; font-size: 1.1rem; border-radius: 4px; }
+        .target { background: #111; padding: 8px; color: var(--accent); border: 1px dashed #333; margin-bottom: 5px; font-family: 'Unbounded'; text-align: center; }
+
+        input { background: #000; border: 1px solid #222; color: #fff; padding: 14px; width: calc(100% - 30px); border-radius: 4px; font-family: 'Inter'; outline: none; margin-bottom: 10px; }
         #status { margin-top: 40px; font-size: 0.65rem; color: #444; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; }
-        .bal-link { color: var(--accent); cursor: pointer; text-decoration: underline; font-weight: 700; }
-        .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'Unbounded'; font-size: 10px; color: #444; text-transform: uppercase; }
-        .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'Unbounded'; font-size: 10px; color: var(--accent); text-transform: uppercase; }
+        .f-left { position: fixed; bottom: 20px; left: 20px; font-family: 'Unbounded'; font-size: 10px; color: #444; }
+        .f-right { position: fixed; bottom: 20px; right: 20px; font-family: 'Unbounded'; font-size: 10px; color: var(--accent); }
     </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ALPHA 1.0.4</div>
+<div class="f-left">ALPHA 1.0.5</div>
 <div class="f-right">POWERED BY POLKADOT PASEO HUB</div>
 
 <div class="container">
     <h1>Rabbit Swap X</h1>
-    <div class="tagline">Paseo Asset Hub Protocol</div>
+    <div class="tagline">Testnet Asset Hub // Terminal</div>
 
     <div id="setup-screen">
-        <button class="btn" onclick="addNetwork()">1. Configure Network</button>
-        <button class="btn btn-outline" onclick="connect()">2. Link Wallet</button>
+        <button class="btn" onclick="addNetwork()">Configure Paseo Hub</button>
+        <button class="btn btn-outline" onclick="connect()">Connect Wallet</button>
     </div>
 
     <div id="terminal-screen" class="dual-grid">
         <div class="module">
             <span class="module-header">System 01 // Extraction</span>
-            <div id="timer-display">SYNCING COOLDOWN...</div>
-            <button class="btn" id="btn-claim" onclick="claim()">Execute claimToken</button>
-            <button class="btn btn-outline" style="font-size:0.6rem" onclick="watchAssets()">Watch HOPx Assets</button>
+            
+            <div id="timer-display"></div>
+            
+            <button class="btn btn-outline" id="btn-check-cooldown" onclick="checkCooldown()">Check System Cooldown</button>
+
+            <div id="poh-box">
+                <div style="font-size: 9px; color: #444; margin-bottom: 8px; text-transform: uppercase;">Sequence Verification Required:</div>
+                <div class="target" id="poh-display">----</div>
+                <div class="poh-grid" id="poh-grid"></div>
+            </div>
+
+            <button class="btn" id="btn-claim" style="display:none;" onclick="claim()">Request 1 HOPx</button>
         </div>
 
         <div class="module">
             <span class="module-header">System 02 // Conversion</span>
-            <div class="input-group">
-                <label>Wallet Balance: <span class="bal-link" id="user-hop" onclick="refreshBalance()">0.00</span> HOPx</label>
-                <input type="number" id="swap-in" placeholder="Amount to swap" oninput="calcSwap(this.value)">
+            <button class="btn btn-outline" style="font-size: 0.7rem; height: 40px; padding: 0;" onclick="refreshBalance()">Scan Wallet Assets</button>
+            
+            <div style="margin: 15px 0;">
+                <label style="font-size: 10px; color: #555;">Available: <span id="user-hop" style="color:var(--accent); font-weight:bold;">0.00</span> HOPx</label>
+                <input type="number" id="swap-in" placeholder="Input HOPx" oninput="calcSwap(this.value)">
             </div>
-            <div style="text-align:center; color:#222; margin:10px 0;">⇅ RATE 1:200 ⇅</div>
-            <div class="input-group">
-                <label>Receive RABx</label>
-                <input type="number" id="swap-out" readonly style="color:var(--accent); font-weight:bold;">
+
+            <div style="margin: 15px 0;">
+                <label style="font-size: 10px; color: #555;">Estimated RABx (1:200)</label>
+                <input type="number" id="swap-out" readonly style="color:var(--accent)">
             </div>
-            <button class="btn btn-outline" id="btn-approve" onclick="approve()">Step 1: Approve</button>
-            <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">Step 2: Swap</button>
+
+            <button class="btn btn-outline" id="btn-approve" onclick="approve()">Authorize Swap</button>
+            <button class="btn" id="btn-swap" style="display:none;" onclick="swap()">Execute Conversion</button>
         </div>
     </div>
 
-    <div id="status">INITIALIZING...</div>
+    <div id="status">System Idle: Pending User Action...</div>
 </div>
 
 <script>
-    // --- BACKGROUND ENGINE (RAGNATELA) ---
+    // --- BACKGROUND RAGNATELA ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    function initParticles() {
+    function init() {
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         particles = [];
-        for (let i = 0; i < 90; i++) {
-            particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.6, vy: (Math.random()-0.5)*0.6, size: 1.2 });
-        }
+        for (let i = 0; i < 80; i++) particles.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, vx: (Math.random()-0.5)*0.5, vy: (Math.random()-0.5)*0.5 });
     }
-    function draw() {
+    function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.4)";
         particles.forEach((p, i) => {
             p.x += p.vx; p.y += p.vy;
             if (p.x<0 || p.x>canvas.width) p.vx*=-1; if (p.y<0 || p.y>canvas.height) p.vy*=-1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, 1.5, 0, Math.PI*2); ctx.fill();
             for (let j=i+1; j<particles.length; j++) {
-                let p2 = particles[j]; let dist = Math.hypot(p.x-p2.x, p.y-p2.y);
-                if (dist < 130) {
-                    ctx.strokeStyle = `rgba(255,255,255,${1 - dist/130 - 0.75})`;
-                    ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-                }
+                let p2 = particles[j]; let d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                if (d < 120) { ctx.strokeStyle = `rgba(255,255,255,${1 - d/120 - 0.7})`; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
             }
         });
-        requestAnimationFrame(draw);
+        requestAnimationFrame(animate);
     }
-    initParticles(); draw(); window.addEventListener('resize', initParticles);
+    init(); animate(); window.addEventListener('resize', init);
 
-    // --- CONTRACT DATA ---
+    // --- BLOCKCHAIN LOGIC ---
     const HOP_ADDR = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
     const SWAP_ADDR = "0x73bde75a9b1E0a13B76624A51371f78FE579d478";
-    const PASEO_HUB_RPC = "https://testnet-passet-hub-eth-rpc.polkadot.io";
-    
-    // ABI ESATTA DAL TUO JSON
-    const FULL_ABI = [
-        "function claimToken() external",
+    const ABI = [
+        "function claimToken() external", 
         "function lastClaim(address) view returns (uint256)",
         "function balanceOf(address) view returns (uint256)",
-        "function COOLDOWN() view returns (uint256)",
-        "function decimals() view returns (uint8)",
-        "function transfer(address to, uint256 amount) returns (bool)",
-        "function swapHOPxforRABx(uint256) external" // Includiamo anche per il secondo contratto
+        "function approve(address,uint256) returns (bool)",
+        "function swapHOPxforRABx(uint256) external"
     ];
+    const ICONS = ['🦊', '🐰', '🌀', '💎', '⚡', '🚀', '🔥', '⚙️'];
 
-    let provider, signer, hopContract, swapContract, userAddr, timerInterval;
+    let provider, signer, hopContract, swapContract, userAddr, sequence = [], step = 0;
 
     async function addNetwork() {
         try {
@@ -130,98 +141,106 @@
                     chainId: '0x190bc416',
                     chainName: 'Paseo Asset Hub',
                     nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                    rpcUrls: [PASEO_HUB_RPC],
+                    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io'],
                     blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io']
                 }]
             });
-            document.getElementById('status').innerText = "Network Configured";
+            document.getElementById('status').innerText = "Network Initialized";
         } catch (e) { console.error(e); }
     }
 
     async function connect() {
-        if (!window.ethereum) return alert("MetaMask not detected");
+        if (!window.ethereum) return alert("MetaMask not found");
         try {
             provider = new ethers.providers.Web3Provider(window.ethereum);
             await provider.send("eth_requestAccounts", []);
             signer = provider.getSigner();
             userAddr = await signer.getAddress();
             
-            // Inizializzazione con ABI completa
-            hopContract = new ethers.Contract(HOP_ADDR, FULL_ABI, signer);
-            swapContract = new ethers.Contract(SWAP_ADDR, FULL_ABI, signer);
+            hopContract = new ethers.Contract(HOP_ADDR, ABI, signer);
+            swapContract = new ethers.Contract(SWAP_ADDR, ABI, signer);
 
             document.getElementById('setup-screen').style.display = 'none';
             document.getElementById('terminal-screen').style.display = 'grid';
-            
-            document.getElementById('status').innerText = "LINKED: " + userAddr.substring(0,6) + "...";
-            
-            runSync();
-        } catch (e) { document.getElementById('status').innerText = "Link Failed"; }
+            document.getElementById('status').innerText = "Connected: " + userAddr.substring(0,8);
+        } catch (e) { document.getElementById('status').innerText = "Connection Refused"; }
     }
 
-    async function runSync() {
-        await refreshBalance();
-        await checkCooldown();
+    async function checkCooldown() {
+        try {
+            document.getElementById('status').innerText = "Interrogating Blockchain...";
+            const last = await hopContract.lastClaim(userAddr);
+            const now = Math.floor(Date.now() / 1000);
+            const next = parseInt(last) + 604800;
+
+            if (now < next && parseInt(last) !== 0) {
+                showCountdown(next);
+                document.getElementById('status').innerText = "System in Cooldown";
+            } else {
+                document.getElementById('btn-check-cooldown').style.display = 'none';
+                startPoh();
+                document.getElementById('status').innerText = "Verification Required";
+            }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('status').innerText = "RPC Error: Try Again";
+        }
+    }
+
+    function showCountdown(target) {
+        const div = document.getElementById('timer-display');
+        div.style.display = 'flex';
+        const update = () => {
+            const diff = target - Math.floor(Date.now() / 1000);
+            if (diff <= 0) return location.reload();
+            const d = Math.floor(diff / 86400);
+            const h = Math.floor((diff % 86400) / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            div.innerText = `RE-EXTRACTION IN: ${d}D ${h}H ${m}M ${s}S`;
+        };
+        update(); setInterval(update, 1000);
+    }
+
+    function startPoh() {
+        document.getElementById('poh-box').style.display = 'block';
+        sequence = [...ICONS].sort(() => 0.5 - Math.random()).slice(0, 4);
+        document.getElementById('poh-display').innerText = sequence.join('');
+        const grid = document.getElementById('poh-grid');
+        grid.innerHTML = '';
+        [...ICONS].sort(() => 0.5 - Math.random()).forEach(icon => {
+            const c = document.createElement('div');
+            c.className = 'poh-cell'; c.innerText = icon;
+            c.onclick = () => {
+                if(icon === sequence[step]) {
+                    step++; c.style.opacity = '0.2';
+                    if(step === 4) {
+                        document.getElementById('poh-box').style.display = 'none';
+                        document.getElementById('btn-claim').style.display = 'block';
+                        document.getElementById('status').innerText = "Identity Verified";
+                    }
+                } else { step = 0; startPoh(); }
+            };
+            grid.appendChild(c);
+        });
+    }
+
+    async function claim() {
+        try {
+            document.getElementById('status').innerText = "Broadcasting Transaction...";
+            const tx = await hopContract.claimToken();
+            await tx.wait();
+            document.getElementById('status').innerText = "Claim Successful";
+            setTimeout(() => location.reload(), 2000);
+        } catch (e) { document.getElementById('status').innerText = "Transaction Reverted"; }
     }
 
     async function refreshBalance() {
         try {
             const bal = await hopContract.balanceOf(userAddr);
-            const dec = await hopContract.decimals();
-            document.getElementById('user-hop').innerText = ethers.utils.formatUnits(bal, dec);
-        } catch (e) { console.error("Balance sync error", e); }
-    }
-
-    async function checkCooldown() {
-        try {
-            const last = await hopContract.lastClaim(userAddr);
-            const cooldownPeriod = await hopContract.COOLDOWN(); 
-            const now = Math.floor(Date.now() / 1000);
-            const nextAvailable = parseInt(last) + parseInt(cooldownPeriod);
-
-            if (now < nextAvailable && parseInt(last) !== 0) {
-                document.getElementById('btn-claim').disabled = true;
-                startCountdown(nextAvailable);
-            } else {
-                document.getElementById('timer-display').style.display = 'none';
-                document.getElementById('btn-claim').disabled = false;
-                document.getElementById('status').innerText = "System Ready";
-            }
-        } catch (e) { console.error("Cooldown sync error", e); }
-    }
-
-    function startCountdown(target) {
-        const display = document.getElementById('timer-display');
-        display.style.display = 'block';
-        if(timerInterval) clearInterval(timerInterval);
-
-        timerInterval = setInterval(() => {
-            const now = Math.floor(Date.now() / 1000);
-            const diff = target - now;
-            if (diff <= 0) {
-                clearInterval(timerInterval);
-                location.reload();
-                return;
-            }
-            const d = Math.floor(diff / 86400);
-            const h = Math.floor((diff % 86400) / 3600);
-            const m = Math.floor((diff % 3600) / 60);
-            const s = diff % 60;
-            display.innerText = `NEXT CLAIM: ${d}D ${h}H ${m}M ${s}S`;
-        }, 1000);
-    }
-
-    async function claim() {
-        try {
-            document.getElementById('status').innerText = "Broadcasting Claim...";
-            const tx = await hopContract.claimToken();
-            document.getElementById('status').innerText = "Mining Transaction...";
-            await tx.wait();
-            document.getElementById('status').innerText = "Claim Success!";
-            runSync();
-        } catch (e) { 
-            document.getElementById('status').innerText = "Claim Denied (Check PAS Gas)"; 
-        }
+            document.getElementById('user-hop').innerText = ethers.utils.formatEther(bal);
+            document.getElementById('status').innerText = "Assets Scanned";
+        } catch (e) { document.getElementById('status').innerText = "Scan Failed"; }
     }
 
     function calcSwap(v) { document.getElementById('swap-out').value = v * 200; }
@@ -229,34 +248,24 @@
     async function approve() {
         try {
             const val = document.getElementById('swap-in').value;
-            document.getElementById('status').innerText = "Approving Swap...";
-            // Usiamo transfer o approve? Se il contratto swap non è un router standard, 
-            // di solito si usa l'approve verso l'indirizzo dello swap.
-            // Nota: Se il tuo ABI non ha 'approve', useremo una versione generica ERC20.
-            const erc20 = new ethers.Contract(HOP_ADDR, ["function approve(address,uint256) returns (bool)"], signer);
-            const tx = await erc20.approve(SWAP_ADDR, ethers.utils.parseEther(val));
+            document.getElementById('status').innerText = "Waiting for Approval...";
+            const tx = await hopContract.approve(SWAP_ADDR, ethers.utils.parseEther(val));
             await tx.wait();
             document.getElementById('btn-approve').style.display = 'none';
             document.getElementById('btn-swap').style.display = 'block';
-            document.getElementById('status').innerText = "Approved!";
-        } catch (e) { document.getElementById('status').innerText = "Auth Error"; }
+            document.getElementById('status').innerText = "Swap Authorized";
+        } catch (e) { document.getElementById('status').innerText = "Authorization Denied"; }
     }
 
     async function swap() {
         try {
             const val = document.getElementById('swap-in').value;
-            document.getElementById('status').innerText = "Executing Swap...";
+            document.getElementById('status').innerText = "Converting Assets...";
             const tx = await swapContract.swapHOPxforRABx(ethers.utils.parseEther(val));
             await tx.wait();
-            document.getElementById('status').innerText = "Swap Success!";
-            runSync();
-        } catch (e) { document.getElementById('status').innerText = "Swap Denied"; }
-    }
-
-    async function watchAssets() {
-        await window.ethereum.request({ method: 'wallet_watchAsset', params: { 
-            type: 'ERC20', options: { address: HOP_ADDR, symbol: 'HOPx', decimals: 18 } 
-        }});
+            document.getElementById('status').innerText = "Conversion Complete";
+            refreshBalance();
+        } catch (e) { document.getElementById('status').innerText = "Pool Insufficient"; }
     }
 </script>
 </body>
