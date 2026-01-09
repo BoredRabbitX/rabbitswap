@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.3.1</title>
+    <title>Rabbit Swap X | Alpha 1.3.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ESTABLISHED // ALPHA 1.3.1</div>
+<div class="f-left">ESTABLISHED // ALPHA 1.3.2</div>
 <div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
 <div class="container">
@@ -92,25 +92,20 @@
         for(let i=0; i<90; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.6, vy:(Math.random()-0.5)*0.6});
     }
     function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "rgba(255,255,255,0.6)";
+        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.6)";
         pts.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy;
-            if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
+            p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
             ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, Math.PI*2); ctx.fill();
             for(let j=i+1; j<pts.length; j++) {
                 let d = Math.hypot(p.x-pts[j].x, p.y-pts[j].y);
-                if(d<130) {
-                    ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`;
-                    ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
-                }
+                if(d<130) { ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke(); }
             }
         });
         requestAnimationFrame(animate);
     }
     init(); animate(); window.onresize = init;
 
-    // --- LOGICA BLOCKCHAIN ---
+    // --- LOGICA BLOCKCHAIN (VERSIONE PULITA) ---
     const ADDR_HOP = "0x5bF234923b9A947Ad6770DAD18A04F9ae33AD3Bc";
     const ADDR_RAB = "0xb28c695683eB22A06dD2D1e70bDA8E915Eb0bc12";
     const ADDR_SWAP = "0xAe2B93BCcdeBf437aD00fd19cA46060Ba145Deb2";
@@ -150,17 +145,19 @@
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const contract = new ethers.Contract(ADDR_HOP, ["function lastClaim(address) view returns (uint256)"], provider);
+            
+            // Tentativo di lettura
             const last = await contract.lastClaim(userAddr);
-            const next = parseInt(last) + 604800;
+            const next = (parseInt(last) + 604800);
             const now = Math.floor(Date.now()/1000);
 
             if(now < next && parseInt(last) !== 0) {
                 document.getElementById('btn-claim-init').style.display = 'none';
                 const disp = document.getElementById('countdown-display');
                 disp.style.display = 'block';
-                setInterval(() => {
+                const timer = setInterval(() => {
                     const diff = next - Math.floor(Date.now()/1000);
-                    if(diff <= 0) location.reload();
+                    if(diff <= 0) { clearInterval(timer); location.reload(); }
                     const d=Math.floor(diff/86400), h=Math.floor((diff%86400)/3600), m=Math.floor((diff%3600)/60), s=diff%60;
                     disp.innerText = `LOCKED: ${d}D ${h}H ${m}M ${s}S`;
                 }, 1000);
@@ -170,7 +167,10 @@
                 startPoh();
                 dbg("POH_AUTH_REQUIRED");
             }
-        } catch(e) { dbg("SCAN_ERR"); }
+        } catch(e) { 
+            console.error(e); 
+            dbg("SCAN_ERR: CHECK NETWORK OR CONTRACT"); 
+        }
     }
 
     function startPoh() {
