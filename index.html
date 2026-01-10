@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.4.1</title>
+    <title>Rabbit Swap X | Alpha 1.4.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ESTABLISHED // ALPHA 1.4.1</div>
+<div class="f-left">ESTABLISHED // ALPHA 1.4.2</div>
 <div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
 <div class="container">
@@ -83,7 +83,6 @@
 </div>
 
 <script>
-    // --- ANIMAZIONE ---
     const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let pts = [];
@@ -105,7 +104,6 @@
     }
     init(); animate(); window.onresize = init;
 
-    // --- CONFIGURAZIONE ---
     const HOP_ADDR = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
     const RAB_ADDR = "0xb28c695683eb22a06dd2d1e70bda8e915eb0bc12";
     const SWAP_ADDR = "0xae2b93bccdebf437ad00fd19ca46060ba145deb2";
@@ -141,7 +139,7 @@
         } catch (e) { dbg("CONN_ERR"); }
     }
 
-    // --- MODULE 01: CLAIM (LOGICA ORIGINALE RIPRISTINATA) ---
+    // --- MODULE 01: CLAIM (ORIGINALE) ---
     async function handleClaimCycle() {
         dbg("INSPECTING_COOLDOWN...");
         try {
@@ -177,39 +175,22 @@
         let step = 0;
         [...icons].sort(() => 0.5 - Math.random()).forEach(i => {
             const c = document.createElement('div'); c.className = 'poh-cell'; c.innerText = i;
-            c.onclick = () => { 
-                if (i === seq[step]) { 
-                    step++; c.style.opacity = '0.2'; 
-                    if (step === 4) { 
-                        document.getElementById('poh-container').style.display = 'none'; 
-                        document.getElementById('btn-final-claim').style.display = 'block'; 
-                        dbg("POH_SUCCESS"); 
-                    } 
-                } else { startPoh(); } 
-            };
+            c.onclick = () => { if (i === seq[step]) { step++; c.style.opacity = '0.2'; if (step === 4) { document.getElementById('poh-container').style.display = 'none'; document.getElementById('btn-final-claim').style.display = 'block'; dbg("POH_SUCCESS"); } } else { startPoh(); } };
             grid.appendChild(c);
         });
     }
 
     async function executeClaim() {
-        dbg("BROADCASTING_EXTRACTION...");
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], signer);
-            // Forza gasLimit per evitare stime errate
+            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], provider.getSigner());
             const tx = await contract.claimToken({ gasLimit: 250000 }); 
-            dbg("TX_PENDING...");
             await tx.wait();
-            dbg("EXTRACTION_SUCCESS");
             location.reload();
-        } catch (e) { 
-            console.error(e);
-            dbg("CLAIM_ERR: REJECTED_BY_NETWORK"); 
-        }
+        } catch (e) { dbg("CLAIM_ERR"); }
     }
 
-    // --- MODULE 02: SWAP ---
+    // --- MODULE 02: SWAP (FORCED ALLOWANCE) ---
     async function refreshBal() {
         try {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -220,19 +201,9 @@
         } catch (e) { dbg("BAL_ERR"); }
     }
 
-    function setMax() { 
-        document.getElementById('swap-in').value = document.getElementById('bal-from').innerText; 
-        updateEstimate(document.getElementById('swap-in').value); 
-    }
-    function updateEstimate(v) { 
-        document.getElementById('swap-out').value = isHopToRab ? (v * 200).toFixed(2) : (v / 200).toFixed(5); 
-    }
-    function toggleDirection() { 
-        isHopToRab = !isHopToRab; 
-        document.getElementById('label-from').innerText = isHopToRab ? "FROM: HOPx" : "FROM: RABx"; 
-        document.getElementById('label-to').innerText = isHopToRab ? "TO: RABx" : "TO: HOPx"; 
-        refreshBal(); 
-    }
+    function setMax() { document.getElementById('swap-in').value = document.getElementById('bal-from').innerText; updateEstimate(document.getElementById('swap-in').value); }
+    function updateEstimate(v) { document.getElementById('swap-out').value = isHopToRab ? (v * 200).toFixed(2) : (v / 200).toFixed(5); }
+    function toggleDirection() { isHopToRab = !isHopToRab; document.getElementById('label-from').innerText = isHopToRab ? "FROM: HOPx" : "FROM: RABx"; document.getElementById('label-to').innerText = isHopToRab ? "TO: RABx" : "TO: HOPx"; refreshBal(); }
 
     async function executeSwap() {
         const val = document.getElementById('swap-in').value;
@@ -244,30 +215,39 @@
             const tokenAddr = isHopToRab ? HOP_ADDR : RAB_ADDR;
 
             dbg("CHECKING_ALLOWANCE...");
-            const token = new ethers.Contract(tokenAddr, ["function approve(address s, uint256 a) public returns (bool)", "function allowance(address o, address s) view returns (uint256)"], signer);
-            const allow = await token.allowance(userAddr, SWAP_ADDR);
-
-            if (allow.lt(amount)) {
-                dbg("AUTHORIZING_VAULT...");
-                const txA = await token.approve(SWAP_ADDR, ethers.constants.MaxUint256);
+            const token = new ethers.Contract(tokenAddr, [
+                "function approve(address spender, uint256 amount) public returns (bool)", 
+                "function allowance(address owner, address spender) view returns (uint256)"
+            ], signer);
+            
+            const currentAllowance = await token.allowance(userAddr, SWAP_ADDR);
+            
+            if (currentAllowance.lt(amount)) {
+                dbg(">> STATUS: AUTHORIZING_VAULT...");
+                // Usiamo un approve esplicito invece di MaxUint256 per essere più sicuri su Asset Hub
+                const txA = await token.approve(SWAP_ADDR, amount.mul(100)); 
                 await txA.wait();
-                dbg("VAULT_AUTHORIZED");
+                dbg(">> STATUS: VAULT_READY");
             }
 
-            dbg("EXECUTING_CONVERSION...");
-            const swap = new ethers.Contract(SWAP_ADDR, ["function swapIn(uint256 a) external", "function swapOut(uint256 a) external"], signer);
-            // Forza parametri di rete per Asset Hub
+            dbg("EXECUTING_SWAP...");
+            const swap = new ethers.Contract(SWAP_ADDR, [
+                "function swapIn(uint256 a) external", 
+                "function swapOut(uint256 a) external"
+            ], signer);
+
+            // Aggiungiamo un piccolo buffer al gas e verifichiamo la transazione
             const txS = isHopToRab ? 
                 await swap.swapIn(amount, { gasLimit: 500000 }) : 
                 await swap.swapOut(amount, { gasLimit: 500000 });
             
-            dbg("WAITING_CONFIRMATION...");
+            dbg(">> STATUS: PENDING_CONFIRMATION...");
             await txS.wait();
-            dbg("CONVERSION_SUCCESS"); 
+            dbg(">> SUCCESS: CONVERSION_COMPLETE"); 
             refreshBal();
         } catch (e) { 
             console.error(e);
-            dbg("ERR: CHECK_LIQUIDITY_OR_GAS"); 
+            dbg("!! ERR: " + (e.reason || "REVERTED_BY_CONTRACT")); 
         }
     }
 </script>
