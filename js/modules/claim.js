@@ -56,7 +56,7 @@ class ClaimManager {
         document.getElementById('btn-claim-init').style.display = 'none';
         document.getElementById('poh-container').style.display = 'block';
         
-        const icons = ['🐰', '💎', '🔥', '⚡', '🌀', '🚀', '🌑', '🛡️'];
+        const icons = ['🥕', '🐰', '🥬', '🌽', '🍅', '🥔', '🥦', '🫛'];
         const target = [...icons].sort(() => 0.5 - Math.random()).slice(0, 4);
         document.getElementById('poh-target').textContent = target.join(' ');
         
@@ -77,14 +77,17 @@ class ClaimManager {
                     step++;
                     cell.classList.add('selected');
                     cell.disabled = true;
+                    cell.classList.add('jump-animation');
+                    
+                    setTimeout(() => cell.classList.remove('jump-animation'), 500);
                     
                     if (step === 4) {
                         document.getElementById('poh-container').style.display = 'none';
                         document.getElementById('btn-final-claim').style.display = 'block';
-                        showNotification('Identity verified!', 'success');
+                        showNotification('🎉 Carrots collected!', 'success');
                     }
                 } else {
-                    showNotification('Incorrect sequence. Try again.', 'warning');
+                    showNotification('Wrong carrot! Try again 🥕', 'warning');
                     this.startPoH();
                 }
             };

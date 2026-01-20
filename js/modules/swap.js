@@ -2,83 +2,84 @@ class SwapManager {
     constructor(config, state) {
         this.config = config;
         this.state = state;
+        this.isHopToRab = true;
     }
 
     calculateSwap(value) {
         const num = parseFloat(value) || 0;
-        const result = this.state.isHopToRab 
+        const result = this.isHopToRab 
             ? num * this.config.SWAP_RATE 
             : num / this.config.SWAP_RATE;
         
-        document.getElementById('input-to').value = result.toFixed(this.state.isHopToRab ? 2 : 5);
+        document.getElementById('input-to').value = result.toFixed(this.isHopToRab ? 2 : 5);
     }
 
     setMax() {
-        const maxBalance = this.state.isHopToRab ? this.state.balances.hop : this.state.balances.rab;
+        const maxBalance = this.isHopToRab ? this.state.balances.hop : this.state.balances.rab;
         document.getElementById('input-from').value = maxBalance.toFixed(2);
         this.calculateSwap(maxBalance);
-    }
-
-    toggleDirection() {
-        this.state.isHopToRab = !this.state.isHopToRab;
-        
-        document.getElementById('label-from').textContent = this.state.isHopToRab ? 'From HOPx' : 'From RABx';
-        document.getElementById('label-to').textContent = this.state.isHopToRab ? 'To RABx' : 'To HOPx';
-        document.getElementById('balance-from').textContent = (this.state.isHopToRab ? this.state.balances.hop : this.state.balances.rab).toFixed(2);
-        document.getElementById('balance-to').textContent = (this.state.isHopToRab ? this.state.balances.rab : this.state.balances.hop).toFixed(2);
-        
-        document.getElementById('input-from').value = '';
-        document.getElementById('input-to').value = '';
     }
 
     async executeSwap() {
         const value = document.getElementById('input-from').value;
         if (!validateInput(value)) {
-            showNotification('Please enter a valid amount', 'warning');
+            showNotification('Please enter a valid amount 🥕', 'warning');
+            return;
+        }
+        
+        if (!this.isHopToRab) {
+            showNotification('Reverse swap not supported yet 🥕', 'warning');
             return;
         }
         
         try {
             showLoading('Checking allowance...');
             
-            const tokenAddr = this.state.isHopToRab ? this.config.HOP_ADDR : this.config.RAB_ADDR;
             const amount = parseEther(value);
             
-            const token = new ethers.Contract(tokenAddr, [
+            const hopToken = new ethers.Contract(this.config.HOP_ADDR, [
                 "function approve(address spender, uint256 amount) public returns (bool)",
                 "function allowance(address owner, address spender) view returns (uint256)"
             ], this.state.signer);
             
-            const currentAllowance = await token.allowance(this.state.userAddress, this.config.SWAP_ADDR);
+            const currentAllowance = await hopToken.allowance(this.state.userAddress, this.config.SWAP_ADDR);
             
             if (currentAllowance.lt(amount)) {
-                showLoading('Authorizing token spending...');
-                const txApprove = await token.approve(this.config.SWAP_ADDR, amount.mul(10));
+                showLoading('Authorizing HOPx spending...');
+                const txApprove = await hopToken.approve(this.config.SWAP_ADDR, ethers.constants.MaxUint256);
                 await txApprove.wait();
             }
             
             showLoading('Executing swap...');
             
             const swapContract = new ethers.Contract(this.config.SWAP_ADDR, [
-                "function swapIn(uint256 a) external",
-                "function swapOut(uint256 a) external"
+                "function swapHOPxforRABx(uint256 nIn) external"
             ], this.state.signer);
             
-            const txSwap = this.state.isHopToRab
-                ? await swapContract.swapIn(amount, { gasLimit: 600000 })
-                : await swapContract.swapOut(amount, { gasLimit: 600000 });
+            const estimatedGas = await swapContract.estimateGas.swapHOPxforRABx(amount);
+            const gasLimit = estimatedGas.mul(150).div(100);
+            
+            const txSwap = await swapContract.swapHOPxforRABx(amount, { gasLimit });
             
             showLoading('Confirming transaction...');
             await txSwap.wait();
             
-            showNotification('Swap completed successfully!', 'success');
+            showNotification('🎉 Swap completed! Enjoy your carrots!', 'success');
             await this.updateBalances();
             
             document.getElementById('input-from').value = '';
             document.getElementById('input-to').value = '';
         } catch (error) {
-            showNotification('Swap failed', 'error');
             console.error('Swap execution error:', error);
+            
+            let errorMessage = 'Swap failed';
+            if (error.reason) {
+                errorMessage += `: ${error.reason}`;
+            } else if (error.message) {
+                errorMessage += `: ${error.message.split('(')[0]}`;
+            }
+            
+            showNotification(errorMessage, 'error');
         } finally {
             hideLoading();
         }

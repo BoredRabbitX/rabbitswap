@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rabbit Swap X | Pro Edition</title>
+    <title>Rabbit Swap X | Carrot Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
@@ -14,24 +14,26 @@
 
 <div class="header">
     <div class="logo">
-        🐰 Rabbit<span>Swap</span> X
+        <span class="rabbit-emoji">🐰</span> Rabbit<span>Swap</span> X
     </div>
-    <div class="version">PRO EDITION v2.0</div>
+    <div class="version">CARROT EDITION v3.0</div>
 </div>
 
 <div class="main-container">
     <div class="welcome-section" id="welcome-section">
-        <h1 class="welcome-title">Neural Exchange</h1>
-        <p class="welcome-subtitle">Advanced Asset Protocol</p>
+        <h1 class="welcome-title">
+            <span class="rabbit-emoji">🐰</span> Hop & Swap <span class="carrot-spin">🥕</span>
+        </h1>
+        <p class="welcome-subtitle">The Friendliest Token Exchange</p>
     </div>
 
     <div class="setup-screen" id="setup-screen">
         <button class="btn" onclick="handleNetwork()">
-            <span style="margin-right: 8px">🌐</span>
+            <span class="rabbit-emoji">🌐</span>
             Connect to Paseo Network
         </button>
         <button class="btn btn-outline" onclick="handleWallet()">
-            <span style="margin-right: 8px">🔐</span>
+            <span class="rabbit-emoji">🐰</span>
             Link Your Wallet
         </button>
     </div>
@@ -40,7 +42,7 @@
         <div class="connection-bar">
             <div class="connection-status" id="connection-status"></div>
             <div class="connection-info">
-                <div class="connection-network">PASEO ASSET HUB</div>
+                <div class="connection-network">PASEO ASSET HUB 🥕</div>
                 <div class="connection-address" id="wallet-address">Not Connected</div>
             </div>
             <div class="connection-action" onclick="handleWallet()">Change Wallet</div>
@@ -48,58 +50,58 @@
 
         <div class="stats-bar">
             <div class="stat-card">
-                <div class="stat-label">HOPx Balance</div>
+                <div class="stat-label">HOPx Balance <span class="rabbit-emoji">🐰</span></div>
                 <div class="stat-value accent" id="stat-hop">0.00</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">RABx Balance</div>
+                <div class="stat-label">RABx Balance <span class="carrot-spin">🥕</span></div>
                 <div class="stat-value success" id="stat-rab">0.00</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Exchange Rate</div>
-                <div class="stat-value" id="stat-rate">1:200</div>
+                <div class="stat-value">1 HOPx = 200 RABx</div>
             </div>
         </div>
 
         <div class="dual-grid">
             <div class="module">
                 <div class="module-header">
-                    <div class="module-title">Module 01 // Extraction</div>
-                    <div class="module-icon">💎</div>
+                    <div class="module-title">Module 01 // Get Carrots 🥕</div>
+                    <div class="module-icon">🐰</div>
                 </div>
                 
                 <div id="claim-countdown" class="countdown-box" style="display: none;">
-                    <div class="countdown-title">Next Claim Available</div>
+                    <div class="countdown-title">Next Carrot Drop In 🥕</div>
                     <div class="countdown-display" id="countdown-timer">--D --H --M --S</div>
                 </div>
                 
                 <button class="btn btn-accent" id="btn-claim-init" onclick="initiateClaim()">
-                    <span style="margin-right: 8px">🎁</span>
-                    Claim HOPx Tokens
+                    <span style="margin-right: 8px">🥕</span>
+                    Claim Free HOPx Tokens
                 </button>
                 
                 <div id="poh-container" class="poh-container" style="display: none;">
-                    <div class="poh-instruction">Select the sequence in order</div>
-                    <div class="poh-target" id="poh-target">🎯 🎯 🎯 🎯</div>
+                    <div class="poh-instruction">Find the matching carrots 🥕</div>
+                    <div class="poh-target" id="poh-target">🥕 🥕 🥕 🥕</div>
                     <div class="poh-grid" id="poh-grid"></div>
                 </div>
                 
                 <button class="btn btn-accent" id="btn-final-claim" style="display: none; margin-top: 15px;" onclick="executeClaim()">
-                    <span style="margin-right: 8px">✅</span>
-                    Execute Extraction
+                    <span style="margin-right: 8px">🎉</span>
+                    Get Your Carrots!
                 </button>
             </div>
 
             <div class="module">
                 <div class="module-header">
-                    <div class="module-title">Module 02 // Conversion</div>
-                    <div class="module-icon">⚡</div>
+                    <div class="module-title">Module 02 // Swap Tokens 🔄</div>
+                    <div class="module-icon">🥕</div>
                 </div>
                 
                 <div class="swap-section">
                     <div class="swap-box">
                         <div class="swap-header">
-                            <span class="swap-label" id="label-from">From HOPx</span>
+                            <span class="swap-label" id="label-from">From HOPx 🐰</span>
                             <span class="swap-balance">
                                 Bal: <span class="swap-balance-value" id="balance-from">0.00</span>
                                 <button class="btn-max" onclick="setMax()">MAX</button>
@@ -108,11 +110,15 @@
                         <input type="number" class="swap-input" id="input-from" placeholder="0.00" oninput="calculateSwap(this.value)" step="0.01">
                     </div>
                     
-                    <button class="swap-direction-btn" onclick="toggleSwapDirection()">⇅</button>
+                    <div style="text-align: center; margin: -10px 0; position: relative; z-index: 5;">
+                        <div style="background: var(--bg-elevated); border: 2px solid var(--border); border-radius: 50%; width: 40px; height: 40px; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                            🐰
+                        </div>
+                    </div>
                     
                     <div class="swap-box">
                         <div class="swap-header">
-                            <span class="swap-label" id="label-to">To RABx</span>
+                            <span class="swap-label" id="label-to">To RABx 🥕</span>
                             <span class="swap-balance">
                                 Bal: <span class="swap-balance-value" id="balance-to">0.00</span>
                             </span>
@@ -122,8 +128,8 @@
                 </div>
                 
                 <button class="btn btn-outline" style="margin-top: 20px;" onclick="executeSwap()">
-                    <span style="margin-right: 8px">🔄</span>
-                    Execute Swap
+                    <span style="margin-right: 8px" class="rabbit-emoji">🐰</span>
+                    Hop Into Swap!
                 </button>
             </div>
         </div>
@@ -131,14 +137,16 @@
 </div>
 
 <div class="footer">
-    Powered by <a href="#">Paseo Asset Hub Protocol</a> • <span style="opacity: 0.5">v2.0</span>
+    Made with <span class="carrot-spin">🥕</span> by Rabbit Team • <span style="opacity: 0.5">v3.0</span>
 </div>
 
 <div id="notification-container"></div>
 <div id="loading-overlay" class="loading-overlay" style="display: none;">
     <div class="loading-content">
         <div class="loading-spinner"></div>
-        <div class="loading-text" id="loading-text">Processing transaction...</div>
+        <div class="loading-text" id="loading-text">
+            <span class="rabbit-emoji">🐰</span> Hopping... <span class="carrot-spin">🥕</span>
+        </div>
     </div>
 </div>
 

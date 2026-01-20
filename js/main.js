@@ -2,7 +2,6 @@ const state = {
     userAddress: null,
     provider: null,
     signer: null,
-    isHopToRab: true,
     balances: { hop: 0, rab: 0 }
 };
 
@@ -35,7 +34,6 @@ function setupEventListeners() {
     window.executeClaim = () => claimManager.executeClaim();
     window.calculateSwap = (value) => swapManager.calculateSwap(value);
     window.setMax = () => swapManager.setMax();
-    window.toggleSwapDirection = () => swapManager.toggleDirection();
     window.executeSwap = () => swapManager.executeSwap();
 }
 

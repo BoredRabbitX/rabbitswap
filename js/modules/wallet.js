@@ -18,10 +18,10 @@ class WalletManager {
                 }]
             });
             
-            showNotification('Network connected successfully', 'success');
+            showNotification('🌐 Network connected! 🥕', 'success');
             return true;
         } catch (error) {
-            showNotification('Failed to connect network', 'error');
+            showNotification('❌ Network connection failed', 'error');
             console.error('Network connection error:', error);
             return false;
         } finally {
@@ -44,10 +44,10 @@ class WalletManager {
             document.getElementById('wallet-address').textContent = formatAddress(this.state.userAddress);
             document.getElementById('connection-status').classList.add('connected');
             
-            showNotification('Wallet connected', 'success');
+            showNotification('🐰 Wallet connected! Hop to it!', 'success');
             return true;
         } catch (error) {
-            showNotification('Failed to connect wallet', 'error');
+            showNotification('❌ Wallet connection failed', 'error');
             console.error('Wallet connection error:', error);
             return false;
         } finally {
