@@ -2,254 +2,152 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Rabbit Swap X | Alpha 1.4.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rabbit Swap X | Pro Edition</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg: #030303; --fg: #ffffff; --accent: #e6007a; --border: #1a1a1a; --card: rgba(10, 10, 10, 0.85); }
-        body { background: var(--bg); color: var(--fg); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-        .container { width: 100%; max-width: 900px; padding: 20px; z-index: 1; text-align: center; }
-        h1 { font-family: 'Unbounded', sans-serif; font-size: 2.5rem; margin: 0; text-transform: uppercase; letter-spacing: -2px; }
-        .tagline { font-size: 0.7rem; color: var(--accent); letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase; opacity: 0.8; }
-        .dual-grid { display: none; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .module { background: var(--card); border: 1px solid var(--border); padding: 25px; border-radius: 12px; backdrop-filter: blur(15px); text-align: left; position: relative; border-top: 3px solid var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .btn { font-family: 'Inter', sans-serif; background: var(--fg); color: var(--bg); border: none; padding: 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; border-radius: 6px; transition: 0.2s; }
-        .btn:hover { background: #ddd; transform: translateY(-1px); }
-        .btn-outline { background: transparent; color: var(--fg); border: 1px solid #333; }
-        .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-max { background: var(--accent); color: #fff; border: none; padding: 3px 8px; font-size: 9px; border-radius: 4px; cursor: pointer; margin-left: 5px; }
-        .swap-box { background: rgba(0,0,0,0.6); border: 1px solid #1a1a1a; padding: 15px; border-radius: 8px; margin: 10px 0; }
-        .swap-input { background: transparent; border: none; color: #fff; font-size: 1.4rem; width: 100%; outline: none; font-family: 'Unbounded'; margin-top: 5px; }
-        #poh-container { display: none; margin-top: 15px; }
-        .poh-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
-        .poh-cell { background: #111; border: 1px solid #222; padding: 12px; cursor: pointer; font-size: 1.3rem; border-radius: 6px; text-align: center; transition: 0.2s; }
-        .poh-cell:hover { background: #222; border-color: var(--accent); }
-        .target-seq { font-family: 'Unbounded'; font-size: 0.8rem; color: var(--accent); text-align: center; background: #000; padding: 10px; border: 1px dashed #333; border-radius: 4px; }
-        #debug-console { font-size: 10px; color: #555; font-family: monospace; text-align: left; margin-top: 25px; padding: 12px; background: rgba(0,0,0,0.4); border-radius: 6px; max-height: 80px; overflow-y: auto; border: 1px solid #111; }
-        .f-left { position: fixed; bottom: 25px; left: 30px; font-family: 'Unbounded'; font-size: 9px; color: #444; letter-spacing: 1px; }
-        .f-right { position: fixed; bottom: 25px; right: 30px; font-family: 'Unbounded'; font-size: 9px; color: var(--accent); letter-spacing: 1px; }
-        #countdown-display { color: #ff3e3e; font-family: 'Unbounded'; font-size: 0.75rem; text-align: center; display: none; padding: 15px; border: 1px solid #300; background: rgba(50,0,0,0.2); border-radius: 6px; margin-top: 10px; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
-<div class="f-left">ESTABLISHED // ALPHA 1.4.2</div>
-<div class="f-right">PASEO ASSET HUB PROTOCOL</div>
 
-<div class="container">
-    <h1>Rabbit Swap X</h1>
-    <div class="tagline">Neural Network Extraction</div>
-
-    <div id="setup-screen" style="max-width: 380px; margin: 0 auto;">
-        <button class="btn" style="margin-bottom:12px" onclick="forceNetwork()">1. Sync Network</button>
-        <button class="btn btn-outline" onclick="forceConnect()">2. Link Terminal</button>
+<div class="header">
+    <div class="logo">
+        🐰 Rabbit<span>Swap</span> X
     </div>
-
-    <div id="terminal-screen" class="dual-grid">
-        <div class="module">
-            <span style="font-size:0.6rem; color:#444; letter-spacing:2px; font-weight:700">MODULE_01 // EXTRACTION</span>
-            <div id="countdown-display"></div>
-            <button class="btn" id="btn-claim-init" style="margin-top:20px" onclick="handleClaimCycle()">Claim your HOPx</button>
-            <div id="poh-container">
-                <div style="font-size: 9px; color: #444; margin-bottom: 8px; text-transform: uppercase;">Verify Identity:</div>
-                <div class="target-seq" id="poh-display">----</div>
-                <div class="poh-grid" id="poh-grid"></div>
-            </div>
-            <button class="btn" id="btn-final-claim" style="display:none; background:var(--accent); color:#fff; margin-top:15px" onclick="executeClaim()">Execute Extraction</button>
-        </div>
-
-        <div class="module">
-            <span style="font-size:0.6rem; color:#444; letter-spacing:2px; font-weight:700">MODULE_02 // CONVERSION</span>
-            <div class="swap-box">
-                <div style="display:flex; justify-content:space-between; font-size:10px; color:#555">
-                    <span id="label-from">FROM: HOPx</span>
-                    <span>Bal: <span id="bal-from" style="color:var(--accent)">0.00</span> <button class="btn-max" onclick="setMax()">MAX</button></span>
-                </div>
-                <input type="number" class="swap-input" id="swap-in" placeholder="0.0" oninput="updateEstimate(this.value)">
-            </div>
-            <div style="text-align:center; margin:-12px 0; z-index:5; position:relative">
-                <button onclick="toggleDirection()" style="background:#000; border:1px solid #333; color:#fff; border-radius:50%; width:34px; height:34px; cursor:pointer; font-size:14px; transition:0.2s">⇅</button>
-            </div>
-            <div class="swap-box">
-                <span style="font-size:10px; color:#555" id="label-to">TO: RABx</span>
-                <input type="number" class="swap-input" id="swap-out" readonly placeholder="0.0" style="color:var(--accent)">
-            </div>
-            <button class="btn btn-outline" style="margin-top:5px" onclick="executeSwap()">Execute Conversion</button>
-        </div>
-    </div>
-    <div id="debug-console">>> STBY: Waiting for System Bridge...</div>
+    <div class="version">PRO EDITION v2.0</div>
 </div>
 
-<script>
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let pts = [];
-    function init() {
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight; pts = [];
-        for(let i=0; i<90; i++) pts.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, vx:(Math.random()-0.5)*0.6, vy:(Math.random()-0.5)*0.6});
-    }
-    function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = "rgba(255,255,255,0.6)";
-        pts.forEach((p, i) => {
-            p.x += p.vx; p.y += p.vy; if(p.x<0 || p.x>canvas.width) p.vx*=-1; if(p.y<0 || p.y>canvas.height) p.vy*=-1;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 1.8, 0, Math.PI*2); ctx.fill();
-            for(let j=i+1; j<pts.length; j++) {
-                let d = Math.hypot(p.x-pts[j].x, p.y-pts[j].y);
-                if(d<130) { ctx.strokeStyle = `rgba(230, 0, 122, ${1.2 - d/130 - 0.5})`; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke(); }
-            }
-        });
-        requestAnimationFrame(animate);
-    }
-    init(); animate(); window.onresize = init;
+<div class="main-container">
+    <div class="welcome-section" id="welcome-section">
+        <h1 class="welcome-title">Neural Exchange</h1>
+        <p class="welcome-subtitle">Advanced Asset Protocol</p>
+    </div>
 
-    const HOP_ADDR = "0x5bf234923b9a947ad6770dad18a04f9ae33ad3bc";
-    const RAB_ADDR = "0xb28c695683eb22a06dd2d1e70bda8e915eb0bc12";
-    const SWAP_ADDR = "0xae2b93bccdebf437ad00fd19ca46060ba145deb2";
+    <div class="setup-screen" id="setup-screen">
+        <button class="btn" onclick="handleNetwork()">
+            <span style="margin-right: 8px">🌐</span>
+            Connect to Paseo Network
+        </button>
+        <button class="btn btn-outline" onclick="handleWallet()">
+            <span style="margin-right: 8px">🔐</span>
+            Link Your Wallet
+        </button>
+    </div>
 
-    let userAddr = "";
-    let isHopToRab = true;
+    <div class="terminal-screen" id="terminal-screen">
+        <div class="connection-bar">
+            <div class="connection-status" id="connection-status"></div>
+            <div class="connection-info">
+                <div class="connection-network">PASEO ASSET HUB</div>
+                <div class="connection-address" id="wallet-address">Not Connected</div>
+            </div>
+            <div class="connection-action" onclick="handleWallet()">Change Wallet</div>
+        </div>
 
-    const dbg = (m) => { const c = document.getElementById('debug-console'); if(c) { c.innerHTML += ">> " + m + "<br>"; c.scrollTop = c.scrollHeight; } };
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-label">HOPx Balance</div>
+                <div class="stat-value accent" id="stat-hop">0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">RABx Balance</div>
+                <div class="stat-value success" id="stat-rab">0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Exchange Rate</div>
+                <div class="stat-value" id="stat-rate">1:200</div>
+            </div>
+        </div>
 
-    async function forceNetwork() {
-        try {
-            await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                    chainId: '0x190bc416',
-                    chainName: 'Paseo Asset Hub',
-                    nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
-                    rpcUrls: ['https://testnet-passet-hub-eth-rpc.polkadot.io']
-                }]
-            });
-            dbg("NETWORK_LOCKED");
-        } catch (e) { dbg("NET_ERR"); }
-    }
+        <div class="dual-grid">
+            <div class="module">
+                <div class="module-header">
+                    <div class="module-title">Module 01 // Extraction</div>
+                    <div class="module-icon">💎</div>
+                </div>
+                
+                <div id="claim-countdown" class="countdown-box" style="display: none;">
+                    <div class="countdown-title">Next Claim Available</div>
+                    <div class="countdown-display" id="countdown-timer">--D --H --M --S</div>
+                </div>
+                
+                <button class="btn btn-accent" id="btn-claim-init" onclick="initiateClaim()">
+                    <span style="margin-right: 8px">🎁</span>
+                    Claim HOPx Tokens
+                </button>
+                
+                <div id="poh-container" class="poh-container" style="display: none;">
+                    <div class="poh-instruction">Select the sequence in order</div>
+                    <div class="poh-target" id="poh-target">🎯 🎯 🎯 🎯</div>
+                    <div class="poh-grid" id="poh-grid"></div>
+                </div>
+                
+                <button class="btn btn-accent" id="btn-final-claim" style="display: none; margin-top: 15px;" onclick="executeClaim()">
+                    <span style="margin-right: 8px">✅</span>
+                    Execute Extraction
+                </button>
+            </div>
 
-    async function forceConnect() {
-        try {
-            const acc = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            userAddr = acc[0];
-            document.getElementById('setup-screen').style.display = 'none';
-            document.getElementById('terminal-screen').style.display = 'grid';
-            dbg("BRIDGE_ESTABLISHED");
-            refreshBal();
-        } catch (e) { dbg("CONN_ERR"); }
-    }
+            <div class="module">
+                <div class="module-header">
+                    <div class="module-title">Module 02 // Conversion</div>
+                    <div class="module-icon">⚡</div>
+                </div>
+                
+                <div class="swap-section">
+                    <div class="swap-box">
+                        <div class="swap-header">
+                            <span class="swap-label" id="label-from">From HOPx</span>
+                            <span class="swap-balance">
+                                Bal: <span class="swap-balance-value" id="balance-from">0.00</span>
+                                <button class="btn-max" onclick="setMax()">MAX</button>
+                            </span>
+                        </div>
+                        <input type="number" class="swap-input" id="input-from" placeholder="0.00" oninput="calculateSwap(this.value)" step="0.01">
+                    </div>
+                    
+                    <button class="swap-direction-btn" onclick="toggleSwapDirection()">⇅</button>
+                    
+                    <div class="swap-box">
+                        <div class="swap-header">
+                            <span class="swap-label" id="label-to">To RABx</span>
+                            <span class="swap-balance">
+                                Bal: <span class="swap-balance-value" id="balance-to">0.00</span>
+                            </span>
+                        </div>
+                        <input type="number" class="swap-input" id="input-to" placeholder="0.00" readonly style="color: var(--accent);">
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline" style="margin-top: 20px;" onclick="executeSwap()">
+                    <span style="margin-right: 8px">🔄</span>
+                    Execute Swap
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    // --- MODULE 01: CLAIM (ORIGINALE) ---
-    async function handleClaimCycle() {
-        dbg("INSPECTING_COOLDOWN...");
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(HOP_ADDR, ["function lastClaim(address) view returns (uint256)"], provider);
-            const last = await contract.lastClaim(userAddr);
-            const next = parseInt(last) + 604800;
-            const now = Math.floor(Date.now() / 1000);
+<div class="footer">
+    Powered by <a href="#">Paseo Asset Hub Protocol</a> • <span style="opacity: 0.5">v2.0</span>
+</div>
 
-            if (now < next && parseInt(last) !== 0) {
-                document.getElementById('btn-claim-init').style.display = 'none';
-                const disp = document.getElementById('countdown-display');
-                disp.style.display = 'block';
-                setInterval(() => {
-                    const diff = next - Math.floor(Date.now() / 1000);
-                    if (diff <= 0) location.reload();
-                    const d = Math.floor(diff / 86400), h = Math.floor((diff % 86400) / 3600), m = Math.floor((diff % 3600) / 60), s = diff % 60;
-                    disp.innerText = `LOCKED: ${d}D ${h}H ${m}M ${s}S`;
-                }, 1000);
-            } else {
-                document.getElementById('btn-claim-init').style.display = 'none';
-                startPoh();
-            }
-        } catch (e) { dbg("SCAN_ERR"); }
-    }
+<div id="notification-container"></div>
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loading-text">Processing transaction...</div>
+    </div>
+</div>
 
-    function startPoh() {
-        document.getElementById('poh-container').style.display = 'block';
-        const icons = ['🐰', '💎', '🔥', '⚡', '🌀', '🚀', '🌑', '🛡️'];
-        const seq = [...icons].sort(() => 0.5 - Math.random()).slice(0, 4);
-        document.getElementById('poh-display').innerText = seq.join(' ');
-        const grid = document.getElementById('poh-grid'); grid.innerHTML = '';
-        let step = 0;
-        [...icons].sort(() => 0.5 - Math.random()).forEach(i => {
-            const c = document.createElement('div'); c.className = 'poh-cell'; c.innerText = i;
-            c.onclick = () => { if (i === seq[step]) { step++; c.style.opacity = '0.2'; if (step === 4) { document.getElementById('poh-container').style.display = 'none'; document.getElementById('btn-final-claim').style.display = 'block'; dbg("POH_SUCCESS"); } } else { startPoh(); } };
-            grid.appendChild(c);
-        });
-    }
-
-    async function executeClaim() {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const contract = new ethers.Contract(HOP_ADDR, ["function claimToken() external"], provider.getSigner());
-            const tx = await contract.claimToken({ gasLimit: 250000 }); 
-            await tx.wait();
-            location.reload();
-        } catch (e) { dbg("CLAIM_ERR"); }
-    }
-
-    // --- MODULE 02: SWAP (FORCED ALLOWANCE) ---
-    async function refreshBal() {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const token = isHopToRab ? HOP_ADDR : RAB_ADDR;
-            const contract = new ethers.Contract(token, ["function balanceOf(address) view returns (uint256)"], provider);
-            const b = await contract.balanceOf(userAddr);
-            document.getElementById('bal-from').innerText = parseFloat(ethers.utils.formatEther(b)).toFixed(2);
-        } catch (e) { dbg("BAL_ERR"); }
-    }
-
-    function setMax() { document.getElementById('swap-in').value = document.getElementById('bal-from').innerText; updateEstimate(document.getElementById('swap-in').value); }
-    function updateEstimate(v) { document.getElementById('swap-out').value = isHopToRab ? (v * 200).toFixed(2) : (v / 200).toFixed(5); }
-    function toggleDirection() { isHopToRab = !isHopToRab; document.getElementById('label-from').innerText = isHopToRab ? "FROM: HOPx" : "FROM: RABx"; document.getElementById('label-to').innerText = isHopToRab ? "TO: RABx" : "TO: HOPx"; refreshBal(); }
-
-    async function executeSwap() {
-        const val = document.getElementById('swap-in').value;
-        if (!val || val <= 0) return;
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const signer = provider.getSigner();
-            const amount = ethers.utils.parseEther(val.toString());
-            const tokenAddr = isHopToRab ? HOP_ADDR : RAB_ADDR;
-
-            dbg("CHECKING_ALLOWANCE...");
-            const token = new ethers.Contract(tokenAddr, [
-                "function approve(address spender, uint256 amount) public returns (bool)", 
-                "function allowance(address owner, address spender) view returns (uint256)"
-            ], signer);
-            
-            const currentAllowance = await token.allowance(userAddr, SWAP_ADDR);
-            
-            if (currentAllowance.lt(amount)) {
-                dbg(">> STATUS: AUTHORIZING_VAULT...");
-                // Usiamo un approve esplicito invece di MaxUint256 per essere più sicuri su Asset Hub
-                const txA = await token.approve(SWAP_ADDR, amount.mul(100)); 
-                await txA.wait();
-                dbg(">> STATUS: VAULT_READY");
-            }
-
-            dbg("EXECUTING_SWAP...");
-            const swap = new ethers.Contract(SWAP_ADDR, [
-                "function swapIn(uint256 a) external", 
-                "function swapOut(uint256 a) external"
-            ], signer);
-
-            // Aggiungiamo un piccolo buffer al gas e verifichiamo la transazione
-            const txS = isHopToRab ? 
-                await swap.swapIn(amount, { gasLimit: 500000 }) : 
-                await swap.swapOut(amount, { gasLimit: 500000 });
-            
-            dbg(">> STATUS: PENDING_CONFIRMATION...");
-            await txS.wait();
-            dbg(">> SUCCESS: CONVERSION_COMPLETE"); 
-            refreshBal();
-        } catch (e) { 
-            console.error(e);
-            dbg("!! ERR: " + (e.reason || "REVERTED_BY_CONTRACT")); 
-        }
-    }
-</script>
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/modules/canvas.js"></script>
+<script src="js/modules/wallet.js"></script>
+<script src="js/modules/claim.js"></script>
+<script src="js/modules/swap.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
